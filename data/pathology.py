@@ -8,6 +8,19 @@ try:
 except ImportError:
     openslide = None
 
+def _extract_batch(slide_path, coords_batch, patch_size, patient_out_dir, patient_id):
+    """Worker function to extract a batch of patches."""
+    slide = openslide.OpenSlide(slide_path)
+    count = 0
+    for (x, y) in coords_batch:
+        patch = slide.read_region((x, y), 0, (patch_size, patch_size))
+        patch_rgb = np.array(patch)[:, :, :3]
+        patch_filename = os.path.join(patient_out_dir, f"{patient_id}_x{x}_y{y}.png")
+        cv2.imwrite(patch_filename, cv2.cvtColor(patch_rgb, cv2.COLOR_RGB2BGR))
+        count += 1
+    slide.close()
+    return count
+
 class WSIPipeline:
     """
     Pipeline for acquiring WSI from S3, performing tissue segmentation,
@@ -39,12 +52,13 @@ class WSIPipeline:
         Segment the tissue from the slide by creating a coarse tissue mask.
         Returns the mask at a lower magnification.
         """
-        # Read slide at lowest magnification for quick segmentation
-        level = slide.level_count - 1
-        dimensions = slide.level_dimensions[level]
-        
-        rgba = slide.read_region((0, 0), level, dimensions)
+        # CRITICAL FIX: Use get_thumbnail to force a maximum dimension of 2048x2048
+        # This prevents a 40GB RAM allocation if the slide lacks a proper pyramidal level!
+        rgba = slide.get_thumbnail((2048, 2048))
         rgb = np.array(rgba)[:, :, :3]
+        
+        # Calculate the downsample ratio (how much the thumbnail shrank the original)
+        downsample_factor = slide.dimensions[0] / rgb.shape[1]
         
         # Convert to grayscale
         gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
@@ -52,7 +66,7 @@ class WSIPipeline:
         # Simple thresholding to ignore white background
         _, mask = cv2.threshold(gray, self.threshold, 255, cv2.THRESH_BINARY_INV)
         
-        return mask, level
+        return mask, downsample_factor
 
     def extract_patches(self, slide_path, patient_id):
         """
@@ -63,8 +77,7 @@ class WSIPipeline:
             
         slide = openslide.OpenSlide(slide_path)
         
-        mask, mask_level = self.segment_tissue(slide)
-        mask_downsample = slide.level_downsamples[mask_level]
+        mask, mask_downsample = self.segment_tissue(slide)
         
         width, height = slide.level_dimensions[0]
         
@@ -73,30 +86,48 @@ class WSIPipeline:
         
         patch_count = 0
         
-        # Iterate over the slide in grid fashion
+        # 1. Collect all valid tissue coordinates
+        valid_coords = []
         for y in range(0, height, self.patch_size):
             for x in range(0, width, self.patch_size):
-                # Calculate corresponding coordinates in the downsampled mask
                 mask_x = int(x / mask_downsample)
                 mask_y = int(y / mask_downsample)
                 mask_w = max(1, int(self.patch_size / mask_downsample))
                 mask_h = max(1, int(self.patch_size / mask_downsample))
                 
-                # Ensure we don't go out of bounds on the mask
                 if mask_y + mask_h > mask.shape[0] or mask_x + mask_w > mask.shape[1]:
                     continue
                 
-                # Check if the region has enough tissue
                 region_mask = mask[mask_y:mask_y+mask_h, mask_x:mask_x+mask_w]
-                if np.mean(region_mask) > 10: # If tissue covers a sufficient portion
-                    patch = slide.read_region((x, y), 0, (self.patch_size, self.patch_size))
-                    patch_rgb = np.array(patch)[:, :, :3]
+                if np.mean(region_mask) > 10:
+                    valid_coords.append((x, y))
                     
-                    patch_filename = os.path.join(patient_out_dir, f"{patient_id}_x{x}_y{y}.png")
-                    cv2.imwrite(patch_filename, cv2.cvtColor(patch_rgb, cv2.COLOR_RGB2BGR))
-                    patch_count += 1
+        # 2. Randomly sample the sweet spot (1024 patches)
+        import random
+        max_patches = 1024
+        if len(valid_coords) > max_patches:
+            valid_coords = random.sample(valid_coords, max_patches)
+            
+        # 3. Extract using Controlled Multiprocessing to manage RAM/Cache
+        import concurrent.futures
+        import math
         
+        num_workers = 4
+        chunk_size = math.ceil(len(valid_coords) / num_workers)
+        chunks = [valid_coords[i:i + chunk_size] for i in range(0, len(valid_coords), chunk_size)]
+        
+        # Close the main slide handle before spawning workers to free memory
         slide.close()
+        
+        patch_count = 0
+        with concurrent.futures.ProcessPoolExecutor(max_workers=num_workers) as executor:
+            futures = [
+                executor.submit(_extract_batch, slide_path, chunk, self.patch_size, patient_out_dir, patient_id)
+                for chunk in chunks
+            ]
+            for future in concurrent.futures.as_completed(futures):
+                patch_count += future.result()
+        
         return patch_count
 
     def process_wsi(self, s3_url, patient_id):
@@ -132,7 +163,7 @@ import glob
 import shutil
 
 class PatchFeatureExtractor:
-    def __init__(self, model_name='dino_vits16', num_clusters=500, output_dir='features', device=None):
+    def __init__(self, model_name='dino_vits16', num_clusters=1024, output_dir='features', device=None):
         self.num_clusters = num_clusters
         self.output_dir = output_dir
         self.device = device if device else ('cuda' if torch.cuda.is_available() else 'cpu')
@@ -169,8 +200,8 @@ class PatchFeatureExtractor:
 
     def process_patient(self, patient_id, patch_dir, delete_patches=True):
         """
-        Extract features, run K-Means to sample exactly 500 patches, 
-        and save to disk as a tensor.
+        Extract features from the sampled 1024 patches, pad if necessary,
+        and save to disk as a tensor (KMeans bypassed).
         """
         features, patch_files = self.extract_features(patch_dir)
         
@@ -184,23 +215,14 @@ class PatchFeatureExtractor:
             pad_feats = np.zeros((pad_len, features.shape[1]), dtype=np.float32)
             sampled_features = np.vstack((features, pad_feats))
         else:
-            # K-Means clustering
-            kmeans = KMeans(n_clusters=self.num_clusters, random_state=42, n_init='auto')
-            kmeans.fit(features)
-            
-            # Find the closest patch to each cluster center
-            sampled_features = []
-            for center in kmeans.cluster_centers_:
-                distances = np.linalg.norm(features - center, axis=1)
-                closest_idx = np.argmin(distances)
-                sampled_features.append(features[closest_idx])
-            sampled_features = np.array(sampled_features)
+            # We already randomly sampled max 1024, so just use them
+            sampled_features = features[:self.num_clusters]
             
         # Save as PyTorch tensor
         out_tensor = torch.tensor(sampled_features, dtype=torch.float32)
         out_path = os.path.join(self.output_dir, f"{patient_id}_features.pt")
         torch.save(out_tensor, out_path)
-        print(f"Saved 500 patch features to {out_path}.")
+        print(f"Saved {self.num_clusters} patch features to {out_path}.")
         
         # Optionally delete raw patches to save disk space
         if delete_patches and os.path.exists(patch_dir):
