@@ -3,6 +3,17 @@ import boto3
 import cv2
 import numpy as np
 from urllib.parse import urlparse
+
+# Native Windows OpenSlide DLL Loading
+if os.name == 'nt':
+    try:
+        # Search for the openslide binaries downloaded by setup.ps1
+        dll_path = os.path.abspath(os.path.join(os.getcwd(), 'openslide-bin', 'openslide-win64-20231122', 'bin'))
+        if os.path.exists(dll_path):
+            os.add_dll_directory(dll_path)
+    except Exception as e:
+        print(f"Warning: Failed to inject OpenSlide DLL directory on Windows: {e}")
+
 try:
     import openslide
 except ImportError:

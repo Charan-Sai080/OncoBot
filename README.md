@@ -15,11 +15,17 @@ This project was built to run efficiently on local hardware (like Apple Silicon 
 ## 🚀 Quick Start Guide
 
 ### 1. Universal Setup Script
-For new contributors or deploying to a new system (Mac or Linux), simply run the included setup script. This script automatically detects your OS, installs the required system-level C libraries (like `openslide`), and configures your Python environment (using Conda if available, or a standard virtual environment).
+For new contributors or deploying to a new system (Mac or Linux), simply run the included setup script. This script automatically detects your OS, installs the required system-level C libraries (like `openslide`), and configures your Python environment.
 
+**Mac / Linux:**
 ```bash
 chmod +x setup.sh
 ./setup.sh
+```
+
+**Native Windows (PowerShell):**
+```powershell
+.\setup.ps1
 ```
 
 ### 2. Manual Installation (Optional)
