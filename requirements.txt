@@ -1,0 +1,11 @@
+torch>=2.0.0
+torchvision
+numpy
+pandas
+opencv-python
+openslide-python
+scikit-learn
+scipy
+requests
+tqdm
+Pillow
