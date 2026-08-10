@@ -1,17 +1,11 @@
-import os
-try:
-    from openai import OpenAI
-except ImportError:
-    OpenAI = None
+import requests
+import json
 
 class ClinicalReportGenerator:
-    def __init__(self, api_key=None, model="gpt-4o"):
-        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+    def __init__(self, model="minimax-m3"):
         self.model = model
-        if OpenAI is not None and self.api_key:
-            self.client = OpenAI(api_key=self.api_key)
-        else:
-            self.client = None
+        self.ollama_url = "https://api.ollama.com/api/generate"
+        self.api_key = "fe01f3e52c9045bf91df5d9cdf14cb06.tBiJRdgUUmfmNk96fWd7PP8K"
 
     def generate_prompt(self, patient_id, top_pathways, attention_summary, survival_score):
         """
@@ -39,24 +33,27 @@ class ClinicalReportGenerator:
 
     def generate_report(self, patient_id, top_pathways, attention_summary, survival_score):
         """
-        Calls the LLM API to generate the human-readable clinical report.
+        Calls the cloud Ollama.com API to generate the human-readable clinical report.
         """
         prompt = self.generate_prompt(patient_id, top_pathways, attention_summary, survival_score)
         
-        if self.client is None:
-            # Fallback if API key or library is missing
-            return f"[MOCK REPORT]\nPrompt sent to LLM:\n{prompt}\n\n(Install openai and set OPENAI_API_KEY to generate real reports.)"
-            
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are a clinical AI reporting assistant."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.3,
-                max_tokens=800
-            )
-            return response.choices[0].message.content
-        except Exception as e:
-            return f"Error generating report: {str(e)}"
+            payload = {
+                "model": self.model,
+                "prompt": prompt,
+                "system": "You are a clinical AI reporting assistant.",
+                "stream": False
+            }
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            response = requests.post(self.ollama_url, json=payload, headers=headers, timeout=60)
+            
+            if response.status_code == 200:
+                return response.json().get("response", "Error: No response generated.")
+            else:
+                return f"Error from Ollama: {response.text}"
+                
+        except requests.exceptions.RequestException as e:
+            return f"Error connecting to local Ollama (is it running?): {str(e)}"
