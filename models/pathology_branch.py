@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 class WSI_MIL_Encoder(nn.Module):
-    def __init__(self, input_dim=384, d_model=256, nhead=8, num_layers=4, num_patches=500):
+    def __init__(self, input_dim=384, d_model=128, nhead=8, num_layers=4, num_patches=1024):
         super(WSI_MIL_Encoder, self).__init__()
         self.input_dim = input_dim
         self.d_model = d_model

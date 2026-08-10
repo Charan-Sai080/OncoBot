@@ -98,7 +98,7 @@ def main():
     pathology_model = WSI_MIL_Encoder(
         input_dim=384, # DINO vits16 dim
         d_model=d_model,
-        num_patches=500
+        num_patches=1024
     )
     
     fusion_model = CrossAttentionFusion(d_model=d_model)
