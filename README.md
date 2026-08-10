@@ -29,6 +29,7 @@ If you prefer not to use the automated script, you can install the dependencies 
 OpenSlide is required to process `.svs` files.
 * **macOS:** `brew install openslide`
 * **Linux (Debian/Ubuntu):** `sudo apt-get install openslide-tools libopenslide0`
+* **Windows (NVIDIA GPU):** Native Windows is not recommended due to OpenSlide C-library compilation issues. **We strongly recommend installing WSL2 (Ubuntu)** on Windows. Once inside WSL2, PyTorch will automatically detect your NVIDIA GPU for full CUDA acceleration. Simply run the Linux `apt-get` command above inside your WSL terminal.
 
 **Python Requirements:**
 If you are using Conda:

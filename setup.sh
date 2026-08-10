@@ -26,6 +26,12 @@ elif [ "$OS" = "Linux" ]; then
         echo "Error: APT package manager not found. Please install 'openslide' manually using your distribution's package manager."
         exit 1
     fi
+elif [[ "$OS" == "CYGWIN"* || "$OS" == "MINGW"* || "$OS" == "MSYS"* ]]; then
+    echo "Windows detected."
+    echo "⚠️  WARNING: Native Windows is notoriously difficult for compiling OpenSlide C-libraries."
+    echo "For Windows users with NVIDIA GPUs, we STRONGLY recommend installing WSL2 (Ubuntu) and running this script inside WSL2 to utilize full CUDA acceleration."
+    echo "If you must use native Windows, please download the OpenSlide Windows Binaries from https://openslide.org/download/ and add them to your PATH manually."
+    exit 1
 else
     echo "Warning: Unsupported OS ($OS). Please ensure OpenSlide C-libraries are installed manually."
 fi
