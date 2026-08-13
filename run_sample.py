@@ -24,13 +24,15 @@ def run_sample_inference():
     if g_feats is None:
         # Fallback to random if dataset is minimal or missing this specific ID
         print(f"Genomic data for {patient_id} not found in tsv. Using dummy genomic data.")
-        num_genes = 1000
+        dummy_genes = ['PIK3CA', 'AKT1', 'TP53', 'MDM2', 'CCND1', 'CDK4', 'CASP3', 'KRAS', 'EGFR', 'MYC']
+        dummy_genes += [f"GENE_{i}" for i in range(1000 - len(dummy_genes))]
+        num_genes = len(dummy_genes)
         g_feats_tensor = torch.rand(1, num_genes)
-        mapper = PathwayMapper([f"GENE_{i}" for i in range(num_genes)])
+        mapper = PathwayMapper(dummy_genes, gmt_path="Datasets/kegg_cancer_pathways.gmt")
     else:
         num_genes = len(genomic_loader.data)
         g_feats_tensor = torch.tensor(g_feats.values, dtype=torch.float32).unsqueeze(0)
-        mapper = PathwayMapper(genomic_loader.data.index.tolist())
+        mapper = PathwayMapper(genomic_loader.data.index.tolist(), gmt_path="Datasets/kegg_cancer_pathways.gmt")
         
     num_pathways = mapper.num_pathways
     pathway_mask = mapper.pathway_mask.to(device)
@@ -67,7 +69,7 @@ def run_sample_inference():
         
         # Fuse
         fused_emb = fusion_model(g_emb, p_emb) # [1, d_model]
-        attn_weights = torch.rand(1, 10) # Mock attention weights for print
+        attn_weights = torch.rand(1, num_pathways) # Mock attention weights over pathways
         
         # Predict Survival
         risk_score = survival_head(fused_emb).item()
@@ -75,9 +77,13 @@ def run_sample_inference():
     print(f"Predicted Cox-PH Risk Score: {risk_score:.4f}")
 
     # 5. Interpretability & LLM Report
-    print("Generating LLM Clinical Report via Anthropic Claude...")
-    top_pathways = ["PI3K-Akt signaling pathway", "p53 signaling pathway", "Cell cycle"] # Mocked for speed
-    attention_summary = f"High cross-attention (weight: {attn_weights.max().item():.4f}) observed between PI3K-Akt pathway and dense tumor cellularity patches."
+    print("Generating LLM Clinical Report via Ollama API...")
+    
+    # Dynamically extract top pathways based on attention weights
+    top_indices = torch.topk(attn_weights, k=3).indices[0].tolist()
+    top_pathways = [mapper.pathway_names[i] for i in top_indices]
+    
+    attention_summary = f"High cross-attention (weight: {attn_weights.max().item():.4f}) observed between {top_pathways[0]} and dense tumor cellularity patches."
     
     report_gen = ClinicalReportGenerator()
     report = report_gen.generate_report(patient_id, top_pathways, attention_summary, risk_score)
