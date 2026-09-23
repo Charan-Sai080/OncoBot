@@ -1,0 +1,1111 @@
+/* ==========================================================================
+   Onco_Bot Clinical Interface — Design System
+   Specification: DESIGN.md (User Interviews Research Field Notes Style)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500;1,8..60,600;1,8..60,700&display=swap');
+
+:root {
+  /* Colors */
+  --color-deep-teal: #1c5d5f;
+  --color-pine-shadow: #0e4749;
+  --color-sage: #65b8a2;
+  --color-lake-teal: #2a7779;
+  --color-forest-floor: #156152;
+  --color-ink-navy: #16325a;
+  --color-dusty-rose: #d6aec1;
+  --color-mint-mist: #a2cbcd;
+  --color-sea-foam: #cae1e2;
+  --color-paper-white: #f2f8f7;
+  --color-card-mint: #e4f0f1;
+  --color-blush-sand: #f2e8e2;
+  --color-charcoal-navy: #283338;
+  --color-slate: #333333;
+  --color-soft-black: #1a1a1a;
+  --color-illustration-ink: #231e21;
+
+  /* Typography — Font Families */
+  --font-serif: 'Source Serif 4', 'P22 Mackinac Pro', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', 'Sofia Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, Monaco, Consolas, monospace;
+
+  /* Typography — Scale */
+  --text-caption: 12px;
+  --leading-caption: 1.5;
+  --tracking-caption: 0.52px;
+
+  --text-body-sm: 14px;
+  --leading-body-sm: 1.43;
+
+  --text-body: 16px;
+  --leading-body: 1.5;
+
+  --text-subheading: 20px;
+  --leading-subheading: 1.4;
+  --tracking-subheading: -0.2px;
+
+  --text-heading-sm: 24px;
+  --leading-heading-sm: 1.38;
+  --tracking-heading-sm: -0.24px;
+
+  --text-heading: 44px;
+  --leading-heading: 1.2;
+
+  --text-heading-lg: 54px;
+  --leading-heading-lg: 1.14;
+
+  --text-display: 64px;
+  --leading-display: 1.15;
+
+  /* Typography — Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Spacing */
+  --spacing-8: 8px;
+  --spacing-16: 16px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-56: 56px;
+  --spacing-64: 64px;
+  --spacing-88: 88px;
+  --spacing-112: 112px;
+
+  /* Layout */
+  --page-max-width: 1240px;
+  --section-gap: 64px;
+  --card-padding: 26px;
+
+  /* Border Radii */
+  --radius-nav: 88px;
+  --radius-tags: 100px;
+  --radius-cards: 12px;
+  --radius-pills: 1000px;
+  --radius-buttons: 48px;
+
+  /* Surfaces */
+  --surface-page-canvas: #f5faf9;
+  --surface-card-mint: #e4f0f1;
+  --surface-blush-sand: #f2e8e2;
+  --surface-sea-foam-wash: #cae1e2;
+}
+
+/* ==========================================================================
+   Base Styles & Reset
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  background-color: var(--surface-page-canvas);
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  color: var(--color-charcoal-navy);
+  background-color: var(--surface-page-canvas);
+  background-image: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Flat surfaces rule: zero drop shadows */
+*, *::before, *::after {
+  box-shadow: none !important;
+}
+
+a {
+  color: var(--color-deep-teal);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+a:hover {
+  color: var(--color-forest-floor);
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* Layout Container */
+.app-container {
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: 16px var(--spacing-24) var(--spacing-88);
+}
+
+/* ==========================================================================
+   Top Navigation Bar (Pill 88px radius)
+   ========================================================================== */
+.top-header {
+  position: sticky;
+  top: 14px;
+  z-index: 100;
+  margin-bottom: var(--spacing-24);
+}
+
+.nav-pill-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-card-mint);
+  border: 1px solid var(--color-mint-mist);
+  border-radius: var(--radius-nav);
+  padding: 8px 16px 8px 24px;
+}
+
+.brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo-text {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-charcoal-navy);
+  letter-spacing: -0.4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brand-logo-text .accent-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-deep-teal);
+}
+
+.brand-version-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-pine-shadow);
+  background: var(--surface-sea-foam-wash);
+  padding: 3px 8px;
+  border-radius: var(--radius-tags);
+  border: 1px solid var(--color-mint-mist);
+}
+
+.nav-links-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-item-link {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-charcoal-navy);
+  padding: 7px 15px;
+  border-radius: var(--radius-nav);
+  transition: all 0.15s ease;
+}
+
+.nav-item-link:hover {
+  background: var(--surface-sea-foam-wash);
+  color: var(--color-pine-shadow);
+}
+
+.nav-item-link.active {
+  background: var(--color-deep-teal);
+  color: #ffffff;
+}
+
+.nav-status-cluster {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.device-badge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-pine-shadow);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--surface-page-canvas);
+  border: 1px solid var(--color-mint-mist);
+  border-radius: var(--radius-pills);
+}
+
+.device-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-sage);
+}
+
+/* ==========================================================================
+   AI Announcement Pill Banner (1000px radius)
+   ========================================================================== */
+.announcement-banner-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--spacing-24);
+}
+
+.announcement-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-card-mint);
+  border: 1px solid var(--color-mint-mist);
+  border-radius: var(--radius-pills);
+  padding: 7px 22px;
+  font-size: 13.5px;
+}
+
+.announcement-icon {
+  font-size: 14px;
+}
+
+.announcement-text {
+  font-family: var(--font-sans);
+  color: var(--color-charcoal-navy);
+}
+
+.announcement-link {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-deep-teal);
+  margin-left: 4px;
+}
+
+.announcement-link:hover {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   Hero Split Composition (Full Section Width matching Dashboard Grid)
+   Flanked by hand-drawn illustrations with large centered serif headline
+   ========================================================================== */
+.hero-split-container {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: var(--spacing-32);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.hero-illustration-flank {
+  flex: 0 1 310px;
+  max-width: 330px;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.hero-illustration-flank.left-flank {
+  transform: none;
+}
+
+.hero-illustration-flank.right-flank {
+  flex: 0 1 330px;
+  max-width: 350px;
+  min-width: 220px;
+  justify-content: flex-end;
+  transform: none;
+}
+
+.hand-drawn-svg {
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  display: block;
+}
+
+.hand-drawn-img {
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  max-height: 330px;
+  display: block;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.hero-center-column {
+  flex: 1 1 420px;
+  max-width: 480px;
+  min-width: 280px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 0 8px;
+}
+
+.hero-title {
+  font-family: var(--font-serif);
+  font-size: 44px;
+  line-height: 1.15;
+  font-weight: 400;
+  color: var(--color-charcoal-navy);
+  letter-spacing: -0.5px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.hero-highlight-serif {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  color: var(--color-deep-teal);
+}
+
+.hand-drawn-underline-wrapper {
+  display: block;
+  width: 260px;
+  margin: 6px auto 0;
+  height: 16px;
+}
+
+.hand-drawn-underline-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hero-subtext {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: #4a5e5d;
+  max-width: 460px;
+  margin: 0 auto var(--spacing-24);
+}
+
+/* Action Cluster */
+.hero-action-cluster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+#hero-analyze-btn {
+  background: var(--color-deep-teal);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 13px 30px;
+  border-radius: var(--radius-buttons);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#hero-analyze-btn:hover {
+  background: var(--color-forest-floor);
+}
+
+.patient-select-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid rgba(28, 93, 95, 0.25);
+  border-radius: var(--radius-buttons);
+  padding: 7px 18px;
+  white-space: nowrap;
+}
+
+.patient-label-mono {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--color-charcoal-navy);
+  white-space: nowrap;
+}
+
+.patient-select-seamless {
+  appearance: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-charcoal-navy);
+  cursor: pointer;
+  padding-right: 4px;
+  white-space: nowrap;
+}
+
+.folder-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-deep-teal);
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Buttons (48px pill radius, flat)
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  padding: 12px 24px;
+  border-radius: var(--radius-buttons);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.btn-lg {
+  padding: 14px 30px;
+  font-size: 15.5px;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: var(--color-deep-teal);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: var(--color-forest-floor);
+  color: #ffffff;
+}
+
+.btn-secondary {
+  background: var(--color-ink-navy);
+  color: #ffffff;
+}
+
+.btn-secondary:hover {
+  background: #0f2442;
+  color: #ffffff;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--color-pine-shadow);
+  color: var(--color-pine-shadow);
+}
+
+.btn-ghost:hover {
+  background: var(--surface-card-mint);
+  color: var(--color-deep-teal);
+}
+
+.btn-sm {
+  padding: 7px 14px;
+  font-size: 13px;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Stat Banner Strip (Full-width bordered strip with pipe dividers)
+   ========================================================================== */
+.stat-banner-strip {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: var(--spacing-32);
+  background: #ffffff;
+  border: 1px solid rgba(28, 93, 95, 0.22);
+  border-radius: var(--radius-cards);
+  padding: 16px 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stat-item.stat-stacked {
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-number {
+  font-family: var(--font-sans);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-deep-teal);
+  letter-spacing: -0.3px;
+}
+
+.stat-stacked-num {
+  font-size: 15.5px;
+  letter-spacing: -0.2px;
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: #5d6f6e;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.stat-stacked-label {
+  font-size: 10px;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 24px;
+  background-color: rgba(28, 93, 95, 0.2);
+}
+
+/* ==========================================================================
+   Two-Column Main Grid Layout
+   ========================================================================== */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--spacing-24);
+  margin-bottom: var(--spacing-48);
+}
+
+.col-12 { grid-column: span 12; }
+.col-7  { grid-column: span 7; }
+.col-5  { grid-column: span 5; }
+
+@media (max-width: 992px) {
+  .hero-split-container {
+    flex-direction: column;
+  }
+  .hero-illustration-flank {
+    display: none;
+  }
+  .col-7, .col-5 {
+    grid-column: span 12;
+  }
+}
+
+/* Feature Card (Mint Surface #e4f0f1, 12px radius, 26px padding) */
+.feature-card {
+  background: var(--surface-card-mint);
+  border: 1px solid var(--color-mint-mist);
+  border-radius: var(--radius-cards);
+  padding: var(--card-padding);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.feature-card-blush {
+  background: var(--surface-blush-sand);
+}
+
+.card-header-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-16, 16px);
+}
+
+.card-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-pine-shadow);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.card-eyebrow .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-deep-teal);
+}
+
+.card-heading {
+  font-family: var(--font-serif);
+  font-size: var(--text-heading-sm);
+  line-height: var(--leading-heading-sm);
+  color: var(--color-charcoal-navy);
+  font-weight: 400;
+}
+
+.card-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Right Column Flow */
+.right-column-flow {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   Mac-Style Browser Window Frame Motif (Sketchbook Inked style)
+   ========================================================================== */
+.browser-window-frame {
+  background: #ffffff;
+  border: 1px solid var(--color-mint-mist);
+  border-radius: var(--radius-cards);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.browser-header-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--surface-page-canvas);
+  border-bottom: 1px solid var(--color-mint-mist);
+}
+
+.browser-dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.browser-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #d6aec1;
+}
+
+.browser-dot:nth-child(2) { background: #cae1e2; }
+.browser-dot:nth-child(3) { background: #65b8a2; }
+
+.browser-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-pine-shadow);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+/* ==========================================================================
+   Interactive WSI Canvas & Patch Heatmap Viewer
+   ========================================================================== */
+.wsi-viewer-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  background: #1e2226;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+#wsi-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.wsi-controls-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: #ffffff;
+  border: 1px solid var(--color-mint-mist);
+  border-radius: 8px;
+}
+
+.filter-pills-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-pill {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-charcoal-navy);
+  background: var(--surface-card-mint);
+  border: 1px solid var(--color-mint-mist);
+  border-radius: var(--radius-tags);
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-pill.active {
+  background: var(--color-deep-teal);
+  color: #ffffff;
+  border-color: var(--color-deep-teal);
+}
+
+.slider-control-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--color-pine-shadow);
+}
+
+.slider-control-wrap input[type="range"] {
+  accent-color: var(--color-deep-teal);
+}
+
+/* Patch Detail Inspector Tray */
+.patch-inspector-panel {
+  margin-top: 14px;
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid var(--color-mint-mist);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.patch-meta-item {
+  font-size: 13px;
+}
+
+.patch-meta-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--color-slate);
+  letter-spacing: 0.03em;
+  margin-bottom: 2px;
+}
+
+.patch-meta-value {
+  font-weight: 600;
+  color: var(--color-charcoal-navy);
+}
+
+/* ==========================================================================
+   Biological Pathway Crosstalk (Genomics)
+   ========================================================================== */
+.pathway-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.pathway-item-card {
+  background: #ffffff;
+  border: 1px solid var(--color-mint-mist);
+  border-radius: 8px;
+  padding: 10px 14px;
+  transition: all 0.15s ease;
+}
+
+.pathway-item-card:hover {
+  border-color: var(--color-deep-teal);
+}
+
+.pathway-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.pathway-title-text {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-charcoal-navy);
+}
+
+.pathway-weight-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-deep-teal);
+  background: var(--surface-card-mint);
+  padding: 2px 7px;
+  border-radius: var(--radius-tags);
+  border: 1px solid var(--color-mint-mist);
+}
+
+.pathway-bar-outer {
+  width: 100%;
+  height: 5px;
+  background: var(--surface-card-mint);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.pathway-bar-inner {
+  height: 100%;
+  background: var(--color-deep-teal);
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pathway-desc {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--color-slate);
+}
+
+/* ==========================================================================
+   Survival Prognosis & Kaplan-Meier Curve
+   ========================================================================== */
+.survival-metric-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-mint-mist);
+}
+
+.risk-score-large {
+  font-family: var(--font-mono);
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-pine-shadow);
+}
+
+.risk-tier-badge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 5px 12px;
+  border-radius: var(--radius-tags);
+  border: 1px solid var(--color-mint-mist);
+}
+
+.km-curve-container {
+  width: 100%;
+  height: 180px;
+  background: #ffffff;
+  border: 1px solid var(--color-mint-mist);
+  border-radius: 8px;
+  padding: 12px;
+  position: relative;
+}
+
+#km-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.km-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 8px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.km-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.km-color-indicator {
+  width: 10px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+/* ==========================================================================
+   Executive Clinical Report Card
+   ========================================================================== */
+.report-card-content {
+  background: #ffffff;
+  border: 1px solid var(--color-mint-mist);
+  border-radius: 8px;
+  padding: 18px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--color-charcoal-navy);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.report-section-title {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-pine-shadow);
+  margin-top: 14px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.report-section-title:first-child {
+  margin-top: 0;
+}
+
+.report-checklist {
+  list-style: none;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.report-checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.report-checkmark {
+  color: var(--color-deep-teal);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+/* ==========================================================================
+   Pipeline Running Progress Strip
+   ========================================================================== */
+.progress-status-strip {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-blush-sand);
+  border: 1px solid var(--color-dusty-rose);
+  border-radius: 8px;
+  padding: 10px 18px;
+  margin-bottom: var(--spacing-24);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--color-pine-shadow);
+}
+
+.progress-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-mint-mist);
+  border-top-color: var(--color-deep-teal);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   Floating Quick Action Assistant (Reference Image Chat Button Style)
+   ========================================================================== */
+.floating-assistant-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--color-ink-navy);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  border: none;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.floating-assistant-btn:hover {
+  background: var(--color-pine-shadow);
+  transform: scale(1.05);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+.page-footer {
+  margin-top: var(--spacing-64);
+  padding-top: var(--spacing-24);
+  border-top: 1px solid var(--color-mint-mist);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12.5px;
+  color: var(--color-slate);
+}
+
+.footer-citations {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--color-pine-shadow);
+}

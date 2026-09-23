@@ -50,3 +50,6 @@ Datasets/
 ehthumbs.db
 Thumbs.db
 TEAMMATE_HANDOVER.md
+
+# Logs
+*.log
