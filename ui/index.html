@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onco_Bot — Multimodal Cancer Survival & Clinical AI</title>
+    <meta name="description" content="Pathway-Aware Multimodal Transformer (PAMT) for Explainable Cancer Survival Prediction and Clinical LLM Reporting in Bladder Urothelial Carcinoma.">
+    <link rel="stylesheet" href="/static/css/style.css?v=1.6">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20100%22%20100%22><text y=%22.9em%22 font-size=%2290%22>🧬</text></svg>">
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- ============================================================
+             1. Top Navigation Bar (Pill 88px radius, Flat, Mint Surface)
+             ============================================================ -->
+        <header class="top-header">
+            <nav class="nav-pill-container" aria-label="Main Navigation">
+                <div class="brand-wrapper">
+                    <span class="brand-logo-text">
+                        Onco_Bot <span class="accent-dot"></span>
+                    </span>
+                    <span class="brand-version-tag">PAMT V1.0</span>
+                </div>
+
+                <div class="nav-links-wrapper">
+                    <a href="#overview" class="nav-item-link active">Overview</a>
+                    <a href="#wsi-explorer" class="nav-item-link">WSI Heatmap</a>
+                    <a href="#pathway-analysis" class="nav-item-link">Pathways</a>
+                    <a href="#survival-curve" class="nav-item-link">Prognosis</a>
+                    <a href="#clinical-report" class="nav-item-link">Clinical Report</a>
+                </div>
+
+                <div class="nav-status-cluster">
+                    <div id="device-status-badge" class="device-badge">
+                        <span class="device-pulse"></span> CPU ACCELERATED
+                    </div>
+                    <button id="run-inference-btn" class="btn btn-primary btn-sm">
+                        <span>Run Full Analysis →</span>
+                    </button>
+                </div>
+            </nav>
+        </header>
+
+        <!-- ============================================================
+             2. AI Announcement Pill Banner (1000px radius)
+             ============================================================ -->
+        <div class="announcement-banner-wrapper">
+            <aside class="announcement-pill">
+                <span class="announcement-icon">🌏</span>
+                <span class="announcement-text"><strong>320 KEGG Pathways & 1,024 WSI Patches.</strong> TCGA-BLCA Bladder Cancer Cohort.</span>
+                <a href="#clinical-report" class="announcement-link">Explore Clinical Summary →</a>
+            </aside>
+        </div>
+
+        <!-- ============================================================
+             3. Hero Section (Using Extracted PNG Illustrations from User)
+             ============================================================ -->
+        <section id="overview" class="hero-split-container">
+            
+            <!-- Left Hand-Drawn Extracted Illustration -->
+            <div class="hero-illustration-flank left-flank">
+                <img src="/static/assets/left_hero_illustration.png?v=2.1" 
+                     alt="Pathology and Molecular Analysis Illustration" 
+                     class="hand-drawn-img" 
+                     width="295" 
+                     height="320" 
+                     loading="eager">
+            </div>
+
+            <!-- Center Content (Exact Typography & Controls from Reference Image) -->
+            <div class="hero-center-column">
+                <h1 class="hero-title">
+                    We connect<br>
+                    <span class="hero-highlight-serif">genomic pathways</span><br>
+                    and tissue morphology
+                    <span class="hand-drawn-underline-wrapper">
+                        <svg class="hand-drawn-underline-svg" viewBox="0 0 280 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 12C75 4 195 4 274 11" stroke="#1c5d5f" stroke-width="2.8" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                </h1>
+                <p class="hero-subtext">
+                    Predict patient-specific cancer survival risk and generate interpretable clinical reports by cross-attending RNA-Seq transcriptomics with gigapixel Whole-Slide Images.
+                </p>
+
+                <!-- Clean, Unified Call To Action -->
+                <div class="hero-action-cluster">
+                    <button id="hero-analyze-btn" class="btn btn-primary btn-lg" onclick="document.getElementById('run-inference-btn').click();">
+                        Run Multimodal Analysis →
+                    </button>
+                    
+                    <div class="patient-select-pill">
+                        <span class="patient-label-mono">SUBJECT :</span>
+                        <select id="patient-select" class="patient-select-seamless">
+                            <option value="TCGA-2F-A9KO">TCGA-2F-A9KO (Primary Test Subject)</option>
+                            <option value="TCGA-2F-A9KP">TCGA-2F-A9KP (Validation Case - Low Risk)</option>
+                            <option value="TCGA-2F-A9KQ">TCGA-2F-A9KQ (Validation Case - Aggressive Recurrence)</option>
+                        </select>
+                        <span class="folder-icon" aria-hidden="true">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1c5d5f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Hand-Drawn Extracted Illustration -->
+            <div class="hero-illustration-flank right-flank">
+                <img src="/static/assets/right_hero_illustration.png?v=2.1" 
+                     alt="Clinical Synthesis and Prognosis Illustration" 
+                     class="hand-drawn-img" 
+                     width="329" 
+                     height="320" 
+                     loading="eager">
+            </div>
+
+        </section>
+
+        <!-- ============================================================
+             4. Stat Banner Strip (Bordered with Thin Pipe Dividers)
+             ============================================================ -->
+        <section class="stat-banner-strip" aria-label="Pipeline Architecture Specifications">
+            <div class="stat-item">
+                <span class="stat-number" id="stat-kegg-count">320</span>
+                <span class="stat-label">KEGG CANCER PATHWAYS</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number">1,024</span>
+                <span class="stat-label">WSI PATCH SWEET-SPOT</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item stat-stacked">
+                <span class="stat-number stat-stacked-num">DINO VIT-S/16</span>
+                <span class="stat-label stat-stacked-label">384-DIM EMBEDDINGS</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number">COX-PH</span>
+                <span class="stat-label">HAZARD REGRESSION</span>
+            </div>
+        </section>
+
+        <!-- Progress Status Strip -->
+        <div id="progress-status-strip" class="progress-status-strip">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span class="progress-spinner"></span>
+                <span id="progress-text">Initializing Multimodal Transformer Inference...</span>
+            </div>
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--color-pine-shadow); font-family: var(--font-mono);">Hardware-Safe Multi-Threading</span>
+        </div>
+
+        <!-- ============================================================
+             5. Streamlined 2-Column Main Workspace
+             ============================================================ -->
+        <div class="dashboard-grid">
+
+            <!-- Left Column: WSI Pathology & Interactive Spatial Heatmap -->
+            <article id="wsi-explorer" class="col-7 feature-card">
+                <div class="card-header-bar">
+                    <div>
+                        <div class="card-eyebrow">
+                            <span class="dot"></span> WSI PATHOLOGY | MULTIPLE INSTANCE LEARNING
+                        </div>
+                        <h2 class="card-heading">Spatial Attention Heatmap</h2>
+                    </div>
+                    <div class="card-header-actions">
+                        <span id="meta-stage" class="brand-version-tag">Stage IIIA</span>
+                    </div>
+                </div>
+
+                <!-- Interactive Viewport -->
+                <div class="wsi-viewer-canvas-wrap">
+                    <canvas id="wsi-canvas"></canvas>
+                </div>
+
+                <!-- Controls Toolbar -->
+                <div class="wsi-controls-toolbar">
+                    <div class="filter-pills-group" role="tablist">
+                        <button class="filter-pill view-mode-pill active" data-mode="overlay">Cross-Attention Overlay</button>
+                        <button class="filter-pill view-mode-pill" data-mode="raw">H&E Stain</button>
+                        <button class="filter-pill view-mode-pill" data-mode="hotspots">High-Risk Hotspots</button>
+                    </div>
+
+                    <div class="slider-control-wrap">
+                        <label for="opacity-slider">Opacity:</label>
+                        <input id="opacity-slider" type="range" min="0" max="1" step="0.05" value="0.75" style="width: 80px;">
+                        <span id="opacity-val">75%</span>
+                    </div>
+                </div>
+
+                <!-- Patch Inspector Tray -->
+                <div class="patch-inspector-panel">
+                    <div class="patch-meta-item">
+                        <div class="patch-meta-label">Selected Patch</div>
+                        <div id="insp-coord" class="patch-meta-value">(4096, 3840)</div>
+                    </div>
+                    <div class="patch-meta-item">
+                        <div class="patch-meta-label">Morphology Classification</div>
+                        <div id="insp-type" class="patch-meta-value">Dense Invasive Carcinoma</div>
+                    </div>
+                    <div class="patch-meta-item">
+                        <div class="patch-meta-label">Cross-Attention Weight</div>
+                        <div id="insp-weight" class="patch-meta-value" style="color: var(--color-deep-teal);">α = 0.8950</div>
+                    </div>
+                    <div class="patch-meta-item">
+                        <div class="patch-meta-label">Tumor Cellularity</div>
+                        <div id="insp-cell" class="patch-meta-value">92% Dense</div>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Right Column: Multimodal Findings, Pathways & Clinical Synthesis -->
+            <div class="col-5 right-column-flow">
+
+                <!-- Prognosis Card -->
+                <article id="survival-curve" class="feature-card" style="margin-bottom: var(--spacing-24);">
+                    <div class="card-header-bar" style="margin-bottom: 14px;">
+                        <div>
+                            <div class="card-eyebrow">
+                                <span class="dot"></span> SURVIVAL ANALYSIS | PROGNOSIS
+                            </div>
+                            <h2 class="card-heading" style="font-size: 20px;">Predicted Survival Risk</h2>
+                        </div>
+                        <span id="risk-tier-badge" class="risk-tier-badge" style="background: var(--surface-blush-sand); color: var(--color-forest-floor);">
+                            HIGH RISK
+                        </span>
+                    </div>
+
+                    <div class="survival-metric-display" style="margin-bottom: 14px; padding-bottom: 12px;">
+                        <div>
+                            <div class="patch-meta-label">Cox-PH Hazard</div>
+                            <div id="risk-score-val" class="risk-score-large" style="font-size: 38px;">1.4280</div>
+                        </div>
+                        <div>
+                            <div class="patch-meta-label">Percentile</div>
+                            <div id="risk-percentile-val" style="font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--color-charcoal-navy);">
+                                89th
+                            </div>
+                        </div>
+                        <div>
+                            <div class="patch-meta-label">Est. Survival</div>
+                            <div id="median-survival-val" style="font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--color-charcoal-navy);">
+                                24.2 mo
+                            </div>
+                        </div>
+                        <div>
+                            <div class="patch-meta-label">C-Index</div>
+                            <div id="c-index-val" style="font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--color-deep-teal);">
+                                0.784
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kaplan-Meier Curve -->
+                    <div class="km-curve-container" style="height: 180px;">
+                        <svg id="km-svg" viewBox="0 0 480 220" preserveAspectRatio="none"></svg>
+                    </div>
+
+                    <div class="km-legend" style="margin-top: 8px;">
+                        <div class="km-legend-item">
+                            <span class="km-color-indicator" style="background: #1c5d5f; height: 3px;"></span>
+                            <span>Patient</span>
+                        </div>
+                        <div class="km-legend-item">
+                            <span class="km-color-indicator" style="background: #65b8a2;"></span>
+                            <span>Low Risk</span>
+                        </div>
+                        <div class="km-legend-item">
+                            <span class="km-color-indicator" style="background: #a2cbcd;"></span>
+                            <span>Baseline</span>
+                        </div>
+                        <div class="km-legend-item">
+                            <span class="km-color-indicator" style="background: #d6aec1;"></span>
+                            <span>High Risk</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Pathways Card -->
+                <article id="pathway-analysis" class="feature-card" style="margin-bottom: var(--spacing-24);">
+                    <div class="card-header-bar" style="margin-bottom: 12px;">
+                        <div>
+                            <div class="card-eyebrow">
+                                <span class="dot"></span> BULK TRANSCRIPTOMICS | BIOLOGICAL PRIORS
+                            </div>
+                            <h2 class="card-heading" style="font-size: 20px;">Top Biological Pathways</h2>
+                        </div>
+                        <span class="brand-version-tag">MSigDB KEGG</span>
+                    </div>
+
+                    <div id="pathway-container" class="pathway-list-container" style="max-height: 250px;">
+                        <!-- Populated dynamically via app.js -->
+                    </div>
+                </article>
+
+                <!-- Executive Clinical Report (Inked Mac Window Frame) -->
+                <article id="clinical-report" class="feature-card feature-card-blush">
+                    <div class="card-header-bar" style="margin-bottom: 12px;">
+                        <div>
+                            <div class="card-eyebrow">
+                                <span class="dot"></span> CLINICAL TRANSLATION | OLLAMA LLM
+                            </div>
+                            <h2 class="card-heading" style="font-size: 20px;">Executive Pathology Summary</h2>
+                        </div>
+                        <div class="card-header-actions">
+                            <button id="regenerate-report-btn" class="btn btn-ghost btn-sm" title="Re-query Ollama Cloud Endpoint" style="padding: 4px 10px; font-size: 12px;">
+                                ↻ Re-Analyze
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="browser-window-frame" style="background: #ffffff; margin-bottom: 0;">
+                        <div class="browser-header-strip">
+                            <div class="browser-dots">
+                                <span class="browser-dot"></span>
+                                <span class="browser-dot"></span>
+                                <span class="browser-dot"></span>
+                            </div>
+                            <span class="browser-title">OLLAMA // CLINICAL_REPORT.MD</span>
+                            <div style="display: flex; gap: 6px;">
+                                <button id="copy-report-btn" class="btn btn-ghost btn-sm" style="padding: 3px 8px; font-size: 11px;">Copy</button>
+                                <button id="export-report-btn" class="btn btn-ghost btn-sm" style="padding: 3px 8px; font-size: 11px;">Export MD</button>
+                            </div>
+                        </div>
+                        <div id="report-content-area" class="report-card-content" style="max-height: 280px; padding: 18px;">
+                            <!-- Populated dynamically via app.js -->
+                        </div>
+                    </div>
+                </article>
+
+            </div>
+
+        </div>
+
+        <!-- ============================================================
+             6. Page Footer
+             ============================================================ -->
+        <footer class="page-footer">
+            <div>
+                <strong>Onco_Bot</strong> — Pathway-Aware Multimodal Transformer for Cancer Survival Prediction.
+            </div>
+            <div class="footer-citations">
+                TCGA-BLCA · Broad Institute MSigDB KEGG · OpenSlide C-Engine · PyTorch 2.9
+            </div>
+        </footer>
+
+        <!-- Floating Quick Navigation Action Button (Matched to Reference Chat Button) -->
+        <a href="#clinical-report" class="floating-assistant-btn" title="Jump to Executive Clinical Summary" aria-label="Jump to Report">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+        </a>
+
+    </div>
+
+    <!-- Application Script -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
