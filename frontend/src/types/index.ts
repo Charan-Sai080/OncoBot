@@ -53,24 +53,31 @@ export interface InferenceResult {
 export interface TileData {
   x: number;
   y: number;
+  coord_x?: number;
+  coord_y?: number;
   attention_weight: number;
   histology_type: string;
   cellular_density: string;
   rank: number;
+  color?: string;
 }
 
 export interface HeatmapData {
   patient_id: string;
-  grid_dim: number;
-  tile_size: number;
-  tiles_count: number;
-  min_attn: number;
-  max_attn: number;
-  mean_attn: number;
-  raw_wsi_base64: string;
-  heatmap_overlay_base64: string;
-  hotspots_base64: string;
-  tiles: TileData[];
+  grid_dim?: number;
+  tile_size?: number;
+  tiles_count?: number;
+  min_attn?: number;
+  max_attn?: number;
+  mean_attn?: number;
+  raw_wsi_base64?: string;
+  heatmap_overlay_base64?: string;
+  hotspots_base64?: string;
+  tiles?: TileData[];
+  total_patches?: number;
+  sampled_patches?: any[];
+  all_patches_coords?: { x: number; y: number; w: number }[];
+  top_hotspots?: any[];
 }
 
 export interface KmCurveData {

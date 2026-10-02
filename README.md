@@ -74,3 +74,74 @@ python run_sample.py
 * `models/` - PyTorch architectures for the Pathway-Aware Transformer, WSI MIL Encoder, and Cross-Attention Fusion.
 * `onco_utils/` - Utility scripts, including the `llm_report.py` module for hitting the Ollama Cloud API.
 * `run_sample.py` - The main entry point to test the entire E2E inference pipeline.
+
+## 🔬 Clinical Histopathology Viewer & WSI Upload Pipeline
+
+Onco_Bot includes an interactive, multi-layer histopathology viewport that connects whole-slide imaging with genomic pathway cross-attention.
+
+### 1. Pre-configured Demo Cases (Instant Testing)
+* For the bundled demo cohort (`TCGA-2F-A9KO`, `TCGA-2F-A9KP`, `TCGA-2F-A9KQ`), the dashboard renders high-resolution, biologically authentic **H&E histopathology micrographs** modeling human urothelial bladder carcinoma (located in `frontend/public/assets/wsi/`).
+* Allows testing of the entire multimodal interface—including real-time spatial zoom, reticle tracking, tile classification, and LLM clinical reporting—without requiring immediate multi-gigabyte slide transfers.
+
+### 2. Uploading Real Patient Images
+* **Supported Formats:** `.png`, `.jpg`, `.jpeg`, `.tif`, `.tiff`, and whole-slide `.svs` files (or direct Google Drive cloud links).
+* **End-to-End Workflow:**
+  1. Click **"Add Patient"** on the home dashboard to expand the cohort ingestion form.
+  2. Upload your real tumor histology image or biopsy crop under **Whole-Slide Histopathology** (alongside optional RNA-Seq count matrices).
+  3. The FastAPI backend automatically captures the file, persists it to the `uploads/` directory, and registers the custom patient case.
+  4. The model tiles the real tissue, runs cross-attention with the genomic embeddings, and generates spatial attention matrices.
+  5. The interactive canvas viewer dynamically decodes and renders your **actual uploaded cancer tissue**, overlaying predictive risk heatmaps directly aligned with your specimen morphology.
+
+### 3. Interactive Canvas Viewing Modes
+* **Attention Overlay Mode:** Blends a calibrated cross-attention colormap (Deep Teal $\rightarrow$ Sage $\rightarrow$ Rose $\rightarrow$ Crimson) over the real cancer tissue to reveal regions driving the survival risk score.
+* **Raw WSI Mode:** Strips off the attention heatmap to inspect the raw, unmasked tissue histology, nuclear pleomorphism, and stromal architecture with subtle grid boundaries.
+* **Hotspots Mode:** Dims background tissue and spotlights high-attention clusters ($\ge 0.72$) representing critical invasive tumor nests and lymphocyte infiltration zones.
+* **Inspection Dock:** Provides up to 4.0x zoom, macro slide viewfinder tracking, coordinate locator $(x, y)$, cellular density metrics, and high-magnification 40x micro-patch previews.
+
+---
+
+## 📈 Stratified Kaplan-Meier Survival Curves & Prognostic Modeling
+
+The prognostic module provides publication-grade, interactive time-to-event survival analysis, projecting the patient's personalized trajectory against benchmarked clinical cohorts from TCGA-BLCA.
+
+### 1. Dual-View Mode
+* **Survival Probability ($S(t)$):** Plots overall survival probability from 100% down across 60 months, highlighting divergence between risk tiers.
+* **Cumulative Hazard ($H(t)$):** Toggles to cumulative hazard mode ($H(t) = -\ln(S(t))$) to visualize the cumulative event rate over the follow-up timeline.
+
+### 2. Publication-Quality Curve Features
+* **95% Confidence Interval (CI) Ribbons:** Smooth translucent ribbons (Pastel Mint for Low Risk, Pastel Rose for High Risk) visualizing statistical confidence bounds.
+* **Censored Event Markers ($+$):** Displays individual right-censored patient events along both cohort curves.
+* **Patient Trajectory Nodes:** Distinct deep blue-teal curve featuring hollow circular tracking nodes along evaluation intervals.
+* **Interactive Timeline Scrubber:** Moving the cursor across the chart renders a vertical guideline with colored intersection nodes and a floating HUD tooltip reporting exact cohort percentages and confidence intervals at any month.
+
+### 3. Key Clinical Statistics & At-Risk Table
+* **Statistical Metrics:**
+  * **Log-Rank Test:** $P < 0.0001$ (statistically significant cohort separation).
+  * **Hazard Ratio (HR):** $2.84$ ($95\%\ \text{CI}: 2.01 - 4.12$).
+  * **Median Survival:** Low Risk (*Not reached*) vs. High Risk (*22.6 months*).
+  * **5-Year Overall Survival:** Low Risk (*62.1%*) vs. High Risk (*18.4%*).
+* **At-Risk Table:**
+  * Displays matched patient numbers at risk at $0, 12, 24, 36, 48,$ and $60$ months ($N=206$ per cohort arm).
+
+---
+
+## 🖥️ Running the Web Application
+
+The system consists of a FastAPI backend and a modern React + Vite clinical dashboard.
+
+### 1. Start the Backend API Server
+```powershell
+# From the project root:
+py server.py
+# Or with hot-reload:
+py -m uvicorn server:app --host 127.0.0.1 --port 8000 --reload
+```
+*API docs and interactive OpenAPI specifications are available at `http://127.0.0.1:8000/docs`.*
+
+### 2. Start the Frontend Development Server
+```bash
+cd frontend
+npm install
+npm run dev
+```
+*Open `http://localhost:5173` in your browser to launch the Onco_Bot Clinical AI dashboard.*

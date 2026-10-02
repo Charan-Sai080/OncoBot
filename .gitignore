@@ -53,3 +53,7 @@ TEAMMATE_HANDOVER.md
 
 # Logs
 *.log
+
+# User uploaded temporary data
+uploads/*
+!uploads/.gitkeep

@@ -100,6 +100,133 @@ uploaded_patients: Dict[str, Dict[str, Any]] = {}
 # -------------------------------------------------------------
 # Synthetic Patch & WSI Generator (Deterministic demo patches)
 # -------------------------------------------------------------
+def generate_wsi_base64_images(patches, grid_size=32, img_size=512, custom_image_path=None):
+    """
+    Renders high-fidelity synthetic or user-uploaded Whole-Slide Histopathology images:
+    1. Raw H&E specimen slide with authentic eosin/hematoxylin staining or user-uploaded image
+    2. Transparent cross-attention heatmap overlay aligned with OncoBot palette
+    3. High-contrast attention hotspots highlighting critical invasive tumor zones
+    """
+    try:
+        cell_size = img_size // grid_size
+        
+        # 1. Base Slide Image (RGBA)
+        has_custom = False
+        raw_img = Image.new("RGBA", (img_size, img_size), (38, 48, 50, 255))
+        
+        # If user uploaded a custom real cancer image, load and resize it as the base slide!
+        if custom_image_path and os.path.exists(custom_image_path):
+            try:
+                ext = os.path.splitext(custom_image_path)[1].lower()
+                if ext in ['.svs']:
+                    try:
+                        import openslide
+                        slide = openslide.OpenSlide(custom_image_path)
+                        thumb = slide.get_thumbnail((img_size, img_size)).convert('RGBA')
+                        raw_img = thumb.resize((img_size, img_size), Image.Resampling.LANCZOS)
+                        has_custom = True
+                        print(f"[Onco_Bot] OpenSlide loaded .svs thumbnail from {custom_image_path}")
+                    except Exception as oe:
+                        print(f"[Onco_Bot] OpenSlide error reading .svs: {oe}")
+                if not has_custom:
+                    with Image.open(custom_image_path) as user_img:
+                        raw_img = user_img.convert('RGBA').resize((img_size, img_size), Image.Resampling.LANCZOS)
+                        has_custom = True
+                        print(f"[Onco_Bot] Loaded real user-uploaded cancer image from {custom_image_path}")
+            except Exception as e:
+                print(f"[Onco_Bot] Notice reading custom WSI image: {e}")
+                
+        # If no custom image, load default high-res macro specimen if present
+        if not has_custom:
+            default_specimen = os.path.join(config.base_dir, "frontend", "public", "assets", "wsi", "wsi_specimen.jpg")
+            if os.path.exists(default_specimen):
+                try:
+                    with Image.open(default_specimen) as def_img:
+                        raw_img = def_img.convert('RGBA').resize((img_size, img_size), Image.Resampling.LANCZOS)
+                        has_custom = True
+                except Exception:
+                    pass
+                    
+        # 2. Transparent Heatmap Overlay (RGBA)
+        overlay_img = Image.new("RGBA", (img_size, img_size), (0, 0, 0, 0))
+        overlay_draw = ImageDraw.Draw(overlay_img)
+        
+        # 3. Hotspots Map (RGBA)
+        hotspots_img = Image.new("RGBA", (img_size, img_size), (0, 0, 0, 0))
+        hotspots_draw = ImageDraw.Draw(hotspots_img)
+        
+        raw_draw = ImageDraw.Draw(raw_img) if not has_custom else None
+        
+        # Realistic H&E stain palette: RGBA format
+        tissue_rgba = {
+            "Dense Invasive Tumor": (152, 58, 104, 255),           # Rich hematoxylin-heavy invasive nests
+            "Reactive Stroma & Fibroblasts": (202, 127, 155, 255), # Collagenous stromal eosin pink
+            "Tumor Infiltrating Lymphocytes": (76, 40, 89, 255),   # Deep hyperchromatic lymphoid aggregates
+            "Necrotic / Hypoxic Zone": (171, 107, 128, 255),       # Glassy apoptotic eosinophilic debris
+            "Benign Urothelial Lining": (207, 152, 170, 255)       # Orderly mucosal urothelium
+        }
+        
+        for p in patches:
+            gx, gy = p["grid_x"], p["grid_y"]
+            x1 = gx * cell_size
+            y1 = gy * cell_size
+            x2 = x1 + cell_size
+            y2 = y1 + cell_size
+            w = p["attention_weight"]
+            ttype = p["tissue_type"]
+            
+            # Draw synthetic morphology if no real cancer image was found
+            if not has_custom and raw_draw:
+                rgba = tissue_rgba.get(ttype, (180, 120, 150, 255))
+                raw_draw.rectangle([x1, y1, x2 - 1, y2 - 1], fill=rgba)
+                if cell_size >= 12:
+                    n_rgba = (max(0, rgba[0] // 2), max(0, rgba[1] // 2), max(0, rgba[2] - 30), 255)
+                    cx, cy = x1 + cell_size // 2, y1 + cell_size // 2
+                    rad = max(1, cell_size // 6)
+                    raw_draw.ellipse([cx - rad, cy - rad, cx + rad, cy + rad], fill=n_rgba)
+            
+            # --- Draw Attention Colormap Overlay (Teal -> Sage -> Dusty Rose -> Crimson) ---
+            if w < 0.35:
+                f = w / 0.35
+                r = int(42 + f * (101 - 42))
+                g = int(119 + f * (184 - 119))
+                b = int(121 + f * (162 - 121))
+            elif w < 0.70:
+                f = (w - 0.35) / 0.35
+                r = int(101 + f * (214 - 101))
+                g = int(184 + f * (174 - 184))
+                b = int(162 + f * (193 - 162))
+            else:
+                f = (w - 0.70) / 0.30
+                r = int(214 + f * (220 - 214))
+                g = int(174 + f * (45 - 174))
+                b = int(193 + f * (75 - 193))
+                
+            alpha = int(140 + w * 110)
+            overlay_draw.rectangle([x1, y1, x2 - 1, y2 - 1], fill=(r, g, b, alpha))
+            
+            # --- Draw Hotspots ---
+            if w >= 0.72:
+                hotspots_draw.rectangle([x1, y1, x2 - 1, y2 - 1], fill=(r, g, b, 235), outline=(255, 255, 255, 255))
+
+        def img_to_b64(img: Image.Image) -> str:
+            buf = BytesIO()
+            img.save(buf, format="PNG")
+            return base64.b64encode(buf.getvalue()).decode("ascii")
+
+        return {
+            "raw_wsi_base64": img_to_b64(raw_img),
+            "heatmap_overlay_base64": img_to_b64(overlay_img),
+            "hotspots_base64": img_to_b64(hotspots_img)
+        }
+    except Exception as e:
+        print(f"[Onco_Bot] WSI image generation notice: {e}")
+        return {
+            "raw_wsi_base64": "",
+            "heatmap_overlay_base64": "",
+            "hotspots_base64": ""
+        }
+
 def generate_synthetic_wsi_grid(patient_id: str, seed: int = 42):
     """
     Generates a realistic WSI patch bag of 1,024 patches with coordinates,
@@ -166,8 +293,41 @@ def generate_synthetic_wsi_grid(patient_id: str, seed: int = 42):
             
     # Sort top patches
     patches_sorted = sorted(patches, key=lambda p: p["attention_weight"], reverse=True)
+    weights = [p["attention_weight"] for p in patches]
+    min_w = round(float(np.min(weights)), 4) if weights else 0.05
+    max_w = round(float(np.max(weights)), 4) if weights else 0.98
+    mean_w = round(float(np.mean(weights)), 4) if weights else 0.52
+
+    tiles = [
+        {
+            "x": p["grid_x"],
+            "y": p["grid_y"],
+            "coord_x": p["coord_x"],
+            "coord_y": p["coord_y"],
+            "attention_weight": p["attention_weight"],
+            "histology_type": p["tissue_type"],
+            "cellular_density": f"{int(p['cellularity_index'] * 100)}% Dense (Pleomorphism)",
+            "rank": rank + 1,
+            "color": p["color"]
+        }
+        for rank, p in enumerate(patches_sorted)
+    ]
+
+    custom_path = uploaded_patients.get(patient_id, {}).get("custom_image_path")
+    images = generate_wsi_base64_images(patches, grid_size=grid_size, img_size=512, custom_image_path=custom_path)
+
     return {
         "patient_id": patient_id,
+        "grid_dim": grid_size,
+        "tile_size": 256,
+        "tiles_count": len(patches),
+        "min_attn": min_w,
+        "max_attn": max_w,
+        "mean_attn": mean_w,
+        "tiles": tiles,
+        "raw_wsi_base64": images["raw_wsi_base64"],
+        "heatmap_overlay_base64": images["heatmap_overlay_base64"],
+        "hotspots_base64": images["hotspots_base64"],
         "total_patches": len(patches),
         "sampled_patches": patches[:64], # Primary interactive subset for fast UI rendering
         "all_patches_coords": [{"x": p["grid_x"], "y": p["grid_y"], "w": p["attention_weight"]} for p in patches],
@@ -308,6 +468,19 @@ async def upload_patient(
         else:
             detected_id = f"PATIENT-{random.randint(1000, 9999)}"
             
+    uploads_dir = os.path.join(config.base_dir, "uploads")
+    os.makedirs(uploads_dir, exist_ok=True)
+    custom_image_path = None
+
+    if wsi_file and wsi_file.filename:
+        safe_name = f"{detected_id}_{os.path.basename(wsi_file.filename)}"
+        saved_file = os.path.join(uploads_dir, safe_name)
+        content = await wsi_file.read()
+        with open(saved_file, "wb") as f:
+            f.write(content)
+        custom_image_path = saved_file
+        print(f"[Onco_Bot] Successfully saved uploaded cancer pathology image to {saved_file} ({len(content)} bytes)")
+
     # Register in dynamic patient catalog
     uploaded_patients[detected_id] = {
         "patient_id": detected_id,
@@ -319,7 +492,8 @@ async def upload_patient(
         "survival_time_months": 22.4,
         "censor": 1,
         "wsi_slide_id": wsi_file.filename if (wsi_file and wsi_file.filename) else f"{detected_id}.svs",
-        "key_mutations": ["TP53 (Detected)", "PIK3CA (Upregulated)"]
+        "key_mutations": ["TP53 (Detected)", "PIK3CA (Upregulated)"],
+        "custom_image_path": custom_image_path
     }
     
     return {
