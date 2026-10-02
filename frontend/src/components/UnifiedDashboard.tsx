@@ -219,7 +219,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
 
       {/* 4. FULL-WIDTH VIEW: SURVIVAL RISK & KM CURVES */}
       {activeTab === 'survival' && (
-        <div className="w-full max-w-[900px] mx-auto animate-in fade-in duration-300">
+        <div className="w-full max-w-[1240px] mx-auto animate-in fade-in duration-300">
           <SurvivalCurveCard kmData={kmData} patientId={patientId} />
         </div>
       )}
