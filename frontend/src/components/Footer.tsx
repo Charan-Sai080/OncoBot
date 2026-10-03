@@ -17,6 +17,9 @@ export const Footer: React.FC = () => {
       <p className="font-sans text-[12px] text-charcoal-navy/50 max-w-[680px]">
         Onco_Bot is an explainable clinical decision support platform designed to bridge gigapixel digital pathology with genomic transcriptomics. Investigational research use only.
       </p>
+      <p className="font-sans text-[11px] text-charcoal-navy/40 font-medium">
+        Research & Development: Arun Chavan • Charan Sai Tej KV • Bhuvan B • Charan Teja
+      </p>
     </footer>
   );
 };
