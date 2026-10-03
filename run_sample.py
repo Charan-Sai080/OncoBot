@@ -76,8 +76,8 @@ def run_sample_inference():
         
     print(f"Predicted Cox-PH Risk Score: {risk_score:.4f}")
 
-    # 5. Interpretability & LLM Report
-    print("Generating LLM Clinical Report via Ollama API...")
+    print("Generating LLM Clinical Report via Hugging Face Inference API...")
+
     
     # Dynamically extract top pathways based on attention weights
     top_indices = torch.topk(attn_weights, k=3).indices[0].tolist()

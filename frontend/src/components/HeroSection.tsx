@@ -13,7 +13,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   children,
 }) => {
   return (
-    <section id="overview" className="w-full max-w-[1240px] mx-auto mb-8 flex flex-col gap-8 relative box-border">
+    <section id="overview" className="w-full max-w-[1400px] mx-auto mb-8 flex flex-col gap-8 relative box-border">
+
       <div className="w-full flex items-center justify-between gap-4 relative box-border">
       {/* Left Hand-Drawn Illustration Flank */}
       <div className="hidden lg:flex flex-0 shrink-1 basis-[310px] max-w-[330px] min-w-[200px] items-center justify-start select-none">

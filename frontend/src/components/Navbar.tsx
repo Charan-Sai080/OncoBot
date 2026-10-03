@@ -77,7 +77,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <nav
-      className="nav-premium-shell mx-auto mb-8 grid min-h-[62px] w-full max-w-[1240px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-full border border-deep-teal/15 px-3 py-2 sm:gap-3 sm:px-4 lg:px-5"
+      className="nav-premium-shell mx-auto mb-8 grid min-h-[62px] w-full max-w-[1400px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-full border border-deep-teal/15 px-3 py-2 sm:gap-3 sm:px-4 lg:px-5"
+
       aria-label="Main Navigation"
     >
       {/* Brand */}

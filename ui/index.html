@@ -302,12 +302,12 @@
                     <div class="card-header-bar" style="margin-bottom: 12px;">
                         <div>
                             <div class="card-eyebrow">
-                                <span class="dot"></span> CLINICAL TRANSLATION | OLLAMA LLM
+                                <span class="dot"></span> CLINICAL TRANSLATION | HUGGING FACE AI
                             </div>
                             <h2 class="card-heading" style="font-size: 20px;">Executive Pathology Summary</h2>
                         </div>
                         <div class="card-header-actions">
-                            <button id="regenerate-report-btn" class="btn btn-ghost btn-sm" title="Re-query Ollama Cloud Endpoint" style="padding: 4px 10px; font-size: 12px;">
+                            <button id="regenerate-report-btn" class="btn btn-ghost btn-sm" title="Re-query Hugging Face Cloud Endpoint" style="padding: 4px 10px; font-size: 12px;">
                                 ↻ Re-Analyze
                             </button>
                         </div>
@@ -320,11 +320,14 @@
                                 <span class="browser-dot"></span>
                                 <span class="browser-dot"></span>
                             </div>
-                            <span class="browser-title">OLLAMA // CLINICAL_REPORT.MD</span>
+                            <span class="browser-title">HUGGING FACE // CLINICAL_REPORT.MD</span>
+
                             <div style="display: flex; gap: 6px;">
                                 <button id="copy-report-btn" class="btn btn-ghost btn-sm" style="padding: 3px 8px; font-size: 11px;">Copy</button>
                                 <button id="export-report-btn" class="btn btn-ghost btn-sm" style="padding: 3px 8px; font-size: 11px;">Export MD</button>
+                                <button id="export-pdf-btn" class="btn btn-primary btn-sm" style="padding: 3px 8px; font-size: 11px; background: #1c5d5f; color: #fff;">Export PDF</button>
                             </div>
+
                         </div>
                         <div id="report-content-area" class="report-card-content" style="max-height: 280px; padding: 18px;">
                             <!-- Populated dynamically via app.js -->

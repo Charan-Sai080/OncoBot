@@ -45,6 +45,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const regenerateReportBtn = document.getElementById("regenerate-report-btn");
     const copyReportBtn = document.getElementById("copy-report-btn");
     const exportReportBtn = document.getElementById("export-report-btn");
+    const exportPdfBtn = document.getElementById("export-pdf-btn");
+
 
     // Inspector elements
     const inspCoord = document.getElementById("insp-coord");
@@ -441,7 +443,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!reportContentArea) return;
         reportContentArea.innerHTML = `
             <div style="display:flex; align-items:center; gap:10px; padding:20px 0; color:var(--color-pine-shadow); font-family:var(--font-mono); font-size:13px;">
-                <span class="progress-spinner"></span> Synthesizing multimodal clinical report via Ollama API...
+                <span class="progress-spinner"></span> Synthesizing multimodal clinical report via Hugging Face AI...
+
             </div>
         `;
 
@@ -531,6 +534,121 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
+    if (exportPdfBtn) {
+        exportPdfBtn.addEventListener("click", () => {
+            if (!reportContentArea) return;
+            const text = reportContentArea.innerText || "";
+            const printWindow = window.open("", "_blank");
+            if (!printWindow) {
+                alert("Please allow popups to export the PDF report.");
+                return;
+            }
+
+            const dateStr = new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Onco_Bot_Clinical_Report_${state.currentPatientId}</title>
+                    <style>
+                        @page { size: A4 portrait; margin: 15mm; }
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #283338; margin: 0; padding: 0; line-height: 1.5; font-size: 12px; }
+                        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1c5d5f; padding-bottom: 12px; margin-bottom: 14px; }
+                        .brand { display: flex; align-items: center; gap: 10px; }
+                        .brand-icon { font-size: 28px; }
+                        .title { font-size: 18px; font-weight: 800; color: #1c5d5f; }
+                        .subtitle { font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+                        .badge { background: #edf7f4; border: 1px solid #cae1e2; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; color: #1c5d5f; }
+                        .dossier { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+                        .dossier-card { background: #f7faf9; border: 1px solid #e2ebea; border-radius: 6px; padding: 8px 10px; }
+                        .dossier-label { font-size: 9px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+                        .dossier-val { font-size: 12px; font-weight: 800; color: #1c5d5f; margin-top: 2px; }
+                        .report-body { font-size: 11.5px; line-height: 1.6; }
+                        .section-title { font-size: 12px; font-weight: 800; color: #1c5d5f; border-bottom: 1px solid #d8e5e5; padding-bottom: 4px; margin-top: 14px; margin-bottom: 6px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
+                        .signoff { margin-top: 20px; border: 1px solid #d8e5e5; border-radius: 6px; padding: 12px; background: #f7faf9; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+                        .sig-line { border-bottom: 1px solid #cbd5e1; height: 24px; margin-top: 10px; }
+                        .disclaimer { margin-top: 14px; font-size: 8.5px; color: #78716c; background: #fdfaf6; border: 1px solid #f3e8d8; padding: 8px; border-radius: 4px; }
+                        @media print {
+                            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="brand">
+                            <span class="brand-icon">🧬</span>
+                            <div>
+                                <div class="title">ONCO_BOT | CLINICAL ONCOLOGY AI REPORT</div>
+                                <div class="subtitle">Pathway-Aware Multimodal Transformer (PAMT) Decision Support</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="badge">🔒 CONFIDENTIAL MEDICAL RECORD</div>
+                            <div style="font-size: 9px; color: #64748b; margin-top: 4px;">DATE: ${dateStr}</div>
+                        </div>
+                    </div>
+
+                    <div class="dossier">
+                        <div class="dossier-card">
+                            <div class="dossier-label">🆔 Patient Identifier</div>
+                            <div class="dossier-val">${state.currentPatientId}</div>
+                        </div>
+                        <div class="dossier-card">
+                            <div class="dossier-label">⚡ Cox-PH Hazard</div>
+                            <div class="dossier-val">${(state.currentRiskScore || 1.428).toFixed(4)}</div>
+                        </div>
+                        <div class="dossier-card">
+                            <div class="dossier-label">📊 Cohort Risk Tier</div>
+                            <div class="dossier-val">${state.currentRiskScore >= 1.5 ? "High Risk" : state.currentRiskScore <= 0.8 ? "Low Risk" : "Moderate Risk"}</div>
+                        </div>
+                        <div class="dossier-card">
+                            <div class="dossier-label">🤖 Synthesis Engine</div>
+                            <div class="dossier-val">Hugging Face Llama-3.3-70B</div>
+                        </div>
+                    </div>
+
+                    <div class="report-body">
+                        ${reportContentArea.innerHTML}
+                    </div>
+
+                    <div class="signoff">
+                        <div>
+                            <div style="font-size: 10px; font-weight: 700; color: #1c5d5f;">👨‍⚕️ Attending Medical Oncologist</div>
+                            <div class="sig-line"></div>
+                            <div style="display: flex; justify-content: space-between; font-size: 8.5px; color: #64748b; margin-top: 3px;">
+                                <span>Signature</span>
+                                <span>Date: ____________</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 10px; font-weight: 700; color: #1c5d5f;">🔬 Lead Molecular Pathologist</div>
+                            <div class="sig-line"></div>
+                            <div style="display: flex; justify-content: space-between; font-size: 8.5px; color: #64748b; margin-top: 3px;">
+                                <span>Signature</span>
+                                <span>Date: ____________</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="disclaimer">
+                        <strong>⚖️ CLINICAL DECISION SUPPORT NOTICE:</strong> This report was algorithmically synthesized using deep multimodal transformers (WSI Vision Transformer + Bulk Transcriptomics KEGG) and large language model reporting. It is intended for investigational decision support alongside multidisciplinary tumor board evaluation.
+                    </div>
+
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() {
+                                window.print();
+                            }, 400);
+                        };
+                    </script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        });
+    }
+
 
     // View mode pills
     viewPills.forEach(pill => {

@@ -28,8 +28,10 @@ share/python-wheels/
 # Virtual environments
 venv/
 env/
+.env
+.env.*
+!.env.example
 .venv/
-.env/
 
 # Pathology / Deep Learning specific ignores
 Datasets/
