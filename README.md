@@ -38,7 +38,7 @@
 
 ## 🩺 Executive Overview
 
-**OncoBot** is a production-grade multimodal clinical AI platform engineered to bridge the translational gap between **Gigapixel Whole-Slide Histopathology (WSI)** and **Bulk Transcriptomics (RNA-Seq)** for patients with **Bladder Urothelial Carcinoma (TCGA-BLCA)**.
+**OncoBot** is a production-grade multimodal clinical AI platform engineered by **Arun Chavan, Charan Sai Tej KV, Bhuvan B, and Charan Teja** to bridge the translational gap between **Gigapixel Whole-Slide Histopathology (WSI)** and **Bulk Transcriptomics (RNA-Seq)** for patients with **Bladder Urothelial Carcinoma (TCGA-BLCA)**.
 
 Traditional computational oncology models either evaluate a single modality in isolation or perform naive late-stage concatenation (flattening features into a generic 1D array), completely destroying spatial tissue architecture and biological pathway hierarchies.
 
@@ -537,7 +537,7 @@ If you utilize OncoBot or its architectural components in your academic work, pl
 ```bibtex
 @article{onco_bot_2026,
   title   = {OncoBot: Pathway-Aware Multimodal Transformer for Cancer Survival Prognostication and Explainable Decision Support},
-  author  = {Chavan, Arun and Contributors},
+  author  = {Chavan, Arun and KV, Charan Sai Tej and B, Bhuvan and Teja, Charan},
   journal = {arXiv preprint},
   year    = {2026}
 }
@@ -572,8 +572,17 @@ If you utilize OncoBot or its architectural components in your academic work, pl
 
 ---
 
-## 👥 Contributors & Acknowledgements
-- **Lead Architecture & Research:** [Arun Chavan](https://github.com/arunchavan4499)
+## 👥 Research & Development Team
+
+**OncoBot** was collaboratively researched and engineered by:
+
+- **Arun Chavan** – *Lead System Architecture, Multimodal Modeling & Core Pipeline Engineering* ([GitHub](https://github.com/arunchavan4499))
+- **Charan Sai Tej KV** – *Pathology Vision Pipeline, WSI Memory Optimization & Patch Feature Extraction*
+- **Bhuvan B** – *Genomics Branch, Transcriptomic Preprocessing & KEGG Pathway Transformer Modeling*
+- **Charan Teja** – *Clinical Decision Support Integration, LLM Reporting Engine & Full-Stack Interface*
+
+### Institutional & Data Acknowledgements
 - **Data Source:** National Cancer Institute Genomic Data Commons (NCI GDC) The Cancer Genome Atlas (TCGA) Bladder Urothelial Carcinoma (`TCGA-BLCA`) cohort.
 - **Biochemical Pathways:** Molecular Signatures Database (MSigDB) and Kyoto Encyclopedia of Genes and Genomes (KEGG).
 - **Vision Foundation:** Meta AI Research (DINO Vision Transformers).
+
