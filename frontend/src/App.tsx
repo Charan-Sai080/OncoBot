@@ -258,14 +258,19 @@ export const App: React.FC = () => {
       }
 
       // 4. Generate Clinical Report
-      setStatusNotification('Synthesizing LLM Clinical Oncology Report...');
+      setStatusNotification('Synthesizing Multimodal Clinical Report via Hugging Face AI...');
       setIsReportLoading(true);
       const reportForm = new FormData();
       reportForm.append('patient_id', patientId);
+      if (completedCase?.risk_score) {
+        reportForm.append('risk_score', String(completedCase.risk_score));
+      }
       const resReport = await fetch('/api/generate-report', {
         method: 'POST',
         body: reportForm,
       });
+
+
       if (resReport.ok) {
         const rep = await resReport.json();
         setReport(rep);
@@ -309,10 +314,14 @@ export const App: React.FC = () => {
     try {
       const reportForm = new FormData();
       reportForm.append('patient_id', selectedPatientId);
+      if (inferenceResult?.risk_score) {
+        reportForm.append('risk_score', String(inferenceResult.risk_score));
+      }
       const resReport = await fetch('/api/generate-report', {
         method: 'POST',
         body: reportForm,
       });
+
       if (resReport.ok) {
         const rep = await resReport.json();
         setReport(rep);
@@ -368,7 +377,7 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-canvas text-charcoal-navy font-sans antialiased px-4 sm:px-6 lg:px-8 py-4">
-      <div className="w-full max-w-[1240px] mx-auto">
+      <div className="w-full max-w-[1400px] mx-auto">
         {/* Top Floating Navbar Pill */}
         <Navbar
           status={status}
@@ -439,7 +448,7 @@ export const App: React.FC = () => {
               onBack={() => navigateTo('home')}
             />
           ) : (
-            <main className="mx-auto mb-8 flex min-h-[520px] w-full max-w-[1240px] items-center justify-center rounded-3xl border border-deep-teal/20 bg-card-mint p-6 text-center">
+            <main className="mx-auto mb-8 flex min-h-[520px] w-full max-w-[1400px] items-center justify-center rounded-3xl border border-deep-teal/20 bg-card-mint p-6 text-center">
               <div>
                 <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-deep-teal">No result loaded</span>
                 <h1 className="mt-1 font-serif text-[28px] font-normal text-charcoal-navy">Run an analysis to view results</h1>
@@ -483,7 +492,7 @@ export const App: React.FC = () => {
 
         {/* Live Status Notification Strip */}
         {statusNotification && (
-          <div className="w-full max-w-[1240px] mx-auto mb-6 bg-sea-foam/90 border border-deep-teal/20 text-deep-teal font-mono text-[12px] font-semibold px-4 py-2 rounded-full flex items-center justify-center gap-2 animate-pulse shadow-sm">
+          <div className="w-full max-w-[1400px] mx-auto mb-6 bg-sea-foam/90 border border-deep-teal/20 text-deep-teal font-mono text-[12px] font-semibold px-4 py-2 rounded-full flex items-center justify-center gap-2 animate-pulse shadow-sm">
             <span className="w-2 h-2 rounded-full bg-deep-teal animate-ping" />
             {statusNotification}
           </div>

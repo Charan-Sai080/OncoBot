@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Copy, Download, RefreshCw, Check, FileText } from 'lucide-react';
+import { Copy, Download, RefreshCw, Check, FileText, FileDown } from 'lucide-react';
 import type { ClinicalReport } from '../types';
+import { exportClinicalReportPdf } from '../utils/reportPdfGenerator';
 
 interface ClinicalReportCardProps {
   report: ClinicalReport | null;
@@ -16,6 +17,8 @@ export const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({
   isLoading,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [isPdfGenerating, setIsPdfGenerating] = useState(false);
+  const [viewMode, setViewMode] = useState<'formatted' | 'raw'>('formatted');
 
   const fallbackReport = `# MULTIMODAL CLINICAL DECISION SUPPORT REPORT
 **Patient ID:** ${patientId}
@@ -59,7 +62,7 @@ Examination of gigapixel WSI tile attention maps indicates high spatial co-local
 3. **Immune Checkpoint Feasibility:** Given elevated TMB (>10 mut/Mb), post-operative monitoring for anti-PD-L1 maintenance (Avelumab) is recommended upon completion of platinum induction.`;
 
   const reportText = report?.report_markdown || fallbackReport;
-  const modelTag = report?.model_used || 'OLLAMA / LLAMA3-MED';
+  const modelTag = report?.model_used || 'HUGGING FACE / LLAMA-3.3-70B';
 
   const handleCopy = async () => {
     try {
@@ -83,8 +86,124 @@ Examination of gigapixel WSI tile attention maps indicates high spatial co-local
     URL.revokeObjectURL(url);
   };
 
+  const handleExportPdf = async () => {
+    setIsPdfGenerating(true);
+    try {
+      await exportClinicalReportPdf({
+        patientId,
+        reportText,
+        modelTag,
+        riskScore: report?.risk_score,
+      });
+    } catch (err) {
+      console.error('Failed to generate PDF:', err);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setIsPdfGenerating(false);
+    }
+  };
+
+  // Render on-screen styled sections
+  const renderFormattedContent = (content: string) => {
+    const lines = content.split('\n');
+    const elements: React.ReactNode[] = [];
+
+    const sectionIcons: Record<string, string> = {
+      '1': '📋',
+      '2': '🧬',
+      '3': '🔬',
+      '4': '💊',
+      '5': '👥',
+    };
+
+    lines.forEach((line, idx) => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed === '---') return;
+
+      // Section Headings (### 1. Title or ### Title)
+      if (trimmed.startsWith('#')) {
+        const titleText = trimmed.replace(/^#+\s*/, '').replace(/\*\*/g, '');
+        const numMatch = titleText.match(/^(\d+)[\.\)]\s*(.*)$/);
+        const secNum = numMatch ? numMatch[1] : '';
+        const icon = secNum && sectionIcons[secNum] ? sectionIcons[secNum] : '📌';
+
+        elements.push(
+          <div
+            key={`sec-${idx}`}
+            className="flex items-center gap-2 font-mono text-[12px] font-bold text-deep-teal uppercase tracking-wider mt-5 mb-2.5 pb-1.5 border-b border-deep-teal/20"
+          >
+            <span className="text-[15px]">{icon}</span>
+            <span>{titleText}</span>
+          </div>
+        );
+        return;
+      }
+
+      // Bullet list items
+      if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+        const itemText = trimmed.substring(2);
+        elements.push(
+          <div key={`li-${idx}`} className="flex items-start gap-2 text-[13px] text-charcoal-navy leading-relaxed mb-2 pl-1">
+            <span className="text-deep-teal font-bold leading-tight select-none">•</span>
+            <div dangerouslySetInnerHTML={{
+              __html: itemText
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-deep-teal font-semibold">$1</strong>')
+                .replace(/`([^`]+)`/g, '<code class="bg-sea-foam/50 text-deep-teal px-1 py-0.5 rounded text-[11px] font-mono">$1</code>')
+            }} />
+          </div>
+        );
+        return;
+      }
+
+      // Numbered items (1. 2. 3.)
+      const numMatch = trimmed.match(/^(\d+)[\.\)]\s+(.*)$/);
+      if (numMatch) {
+        const num = numMatch[1];
+        const itemText = numMatch[2];
+        let badgeEmoji = '🔹';
+        const lower = itemText.toLowerCase();
+        if (lower.includes('chemo') || lower.includes('cisplatin') || lower.includes('induction')) badgeEmoji = '💉';
+        else if (lower.includes('immuno') || lower.includes('pd-l1') || lower.includes('checkpoint')) badgeEmoji = '🛡️';
+        else if (lower.includes('targeted') || lower.includes('erbb') || lower.includes('fgfr')) badgeEmoji = '🎯';
+        else if (lower.includes('surveillance') || lower.includes('cystoscopy')) badgeEmoji = '👁️';
+        else if (lower.includes('tumor board') || lower.includes('action plan')) badgeEmoji = '👥';
+
+        elements.push(
+          <div
+            key={`num-${idx}`}
+            className="bg-card-mint/60 border-l-3 border-deep-teal px-3.5 py-2 rounded-r-lg my-2 text-[13px] text-charcoal-navy leading-relaxed"
+          >
+            <span className="font-bold text-deep-teal mr-1.5 select-none">{badgeEmoji} {num}.</span>
+            <span dangerouslySetInnerHTML={{
+              __html: itemText
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-deep-teal font-semibold">$1</strong>')
+                .replace(/`([^`]+)`/g, '<code class="bg-sea-foam/50 text-deep-teal px-1 py-0.5 rounded text-[11px] font-mono">$1</code>')
+            }} />
+          </div>
+        );
+        return;
+      }
+
+      // Normal paragraph
+      elements.push(
+        <p
+          key={`p-${idx}`}
+          className="text-[13px] text-charcoal-navy leading-relaxed mb-2.5 font-normal"
+          dangerouslySetInnerHTML={{
+            __html: trimmed
+              .replace(/\*\*(.*?)\*\*/g, '<strong class="text-deep-teal font-semibold">$1</strong>')
+              .replace(/`([^`]+)`/g, '<code class="bg-sea-foam/50 text-deep-teal px-1 py-0.5 rounded text-[11px] font-mono">$1</code>')
+          }}
+        />
+      );
+    });
+
+    return elements;
+  };
+
   return (
-    <div id="report-section" className="bg-card-mint border border-charcoal-navy/15 rounded-2xl p-6 mb-8 flex flex-col shadow-none">
+    <div id="report-section" className="w-full bg-card-mint border border-charcoal-navy/15 rounded-2xl p-6 lg:p-8 mb-4 flex flex-col shadow-none">
+
       {/* Header & Action Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-3 border-b border-charcoal-navy/10">
         <div>
@@ -128,39 +247,84 @@ Examination of gigapixel WSI tile attention maps indicates high spatial co-local
 
           <button
             onClick={handleDownload}
-            className="bg-deep-teal hover:bg-forest-floor text-white font-sans text-[12px] font-semibold px-3 py-1.5 rounded-full border-none flex items-center gap-1.5 transition-colors cursor-pointer shadow-none"
+            className="bg-paper-white hover:bg-sea-foam text-charcoal-navy font-sans text-[12px] font-semibold px-3 py-1.5 rounded-full border border-charcoal-navy/20 flex items-center gap-1.5 transition-colors cursor-pointer"
             title="Download Markdown Report"
           >
-            <Download className="w-3.5 h-3.5" />
+            <Download className="w-3.5 h-3.5 text-charcoal-navy/70" />
             Export (.md)
+          </button>
+
+          <button
+            onClick={handleExportPdf}
+            disabled={isPdfGenerating}
+            className="bg-deep-teal hover:bg-forest-floor text-white font-sans text-[12px] font-semibold px-3.5 py-1.5 rounded-full border-none flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:shadow disabled:opacity-60"
+            title="Download Official Clinical PDF with Medical Letterhead, Icons & Badges"
+          >
+            {isPdfGenerating ? (
+              <>
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Rendering PDF...</span>
+              </>
+            ) : (
+              <>
+                <FileDown className="w-3.5 h-3.5" />
+                <span>Export PDF</span>
+              </>
+            )}
           </button>
         </div>
       </div>
 
-      {/* Model Spec Ribbon */}
-      <div className="flex items-center justify-between mb-4 bg-paper-white border border-charcoal-navy/10 px-4 py-2 rounded-xl">
+      {/* Model Spec Ribbon & View Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 bg-paper-white border border-charcoal-navy/10 px-4 py-2 rounded-xl">
         <div className="flex items-center gap-2">
-          <FileText className="w-4 h-4 text-deep-teal" />
+          <FileText className="w-4 h-4 text-deep-teal shrink-0" />
           <span className="font-mono text-[11px] font-semibold text-charcoal-navy/80 tracking-wider uppercase">
             SYNTHESIS ENGINE:
           </span>
-          <span className="font-mono text-[12px] font-bold text-deep-teal">
+          <span className="font-mono text-[12px] font-bold text-deep-teal truncate max-w-[280px]">
             {modelTag}
           </span>
         </div>
-        <span className="font-mono text-[11px] text-charcoal-navy/60">
-          Medical LLM Cross-Attention Verified
-        </span>
+
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-[11px] text-charcoal-navy/60 hidden sm:inline">
+            Medical LLM Cross-Attention Verified
+          </span>
+          <div className="flex items-center bg-card-mint/60 p-0.5 rounded-lg border border-charcoal-navy/10 text-[11px] font-mono">
+            <button
+              onClick={() => setViewMode('formatted')}
+              className={`px-2 py-0.5 rounded cursor-pointer transition-colors ${
+                viewMode === 'formatted' ? 'bg-deep-teal text-white font-semibold' : 'text-charcoal-navy/70 hover:text-deep-teal'
+              }`}
+            >
+              Formatted
+            </button>
+            <button
+              onClick={() => setViewMode('raw')}
+              className={`px-2 py-0.5 rounded cursor-pointer transition-colors ${
+                viewMode === 'raw' ? 'bg-deep-teal text-white font-semibold' : 'text-charcoal-navy/70 hover:text-deep-teal'
+              }`}
+            >
+              Markdown
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Report Render Body */}
-      <div className="bg-paper-white border border-charcoal-navy/15 rounded-xl p-5 max-h-[500px] overflow-y-auto leading-relaxed">
+      <div className="w-full bg-paper-white border border-charcoal-navy/15 rounded-xl p-5 lg:p-7 max-h-[600px] overflow-y-auto leading-relaxed">
+
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-deep-teal">
             <RefreshCw className="w-6 h-6 animate-spin text-deep-teal" />
             <span className="font-mono text-[13px] tracking-wider uppercase">
               Generating Multimodal Clinical Report via LLM...
             </span>
+          </div>
+        ) : viewMode === 'formatted' ? (
+          <div className="space-y-1 select-text">
+            {renderFormattedContent(reportText)}
           </div>
         ) : (
           <pre className="font-sans text-[13px] text-charcoal-navy whitespace-pre-wrap leading-relaxed select-text font-normal">
@@ -171,3 +335,4 @@ Examination of gigapixel WSI tile attention maps indicates high spatial co-local
     </div>
   );
 };
+

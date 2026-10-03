@@ -1,6 +1,21 @@
 import os
 from dataclasses import dataclass
 
+def _load_env_file():
+    env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".env"))
+    if os.path.exists(env_path):
+        try:
+            with open(env_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+        except Exception:
+            pass
+
+_load_env_file()
+
 @dataclass
 class OncoBotConfig:
     # Server configuration
@@ -24,8 +39,15 @@ class OncoBotConfig:
     default_patient_id: str = "TCGA-2F-A9KO"
     cancer_type: str = "TCGA-BLCA (Bladder Urothelial Carcinoma)"
     
-    # LLM configuration
-    ollama_model: str = "minimax-m3"
-    ollama_url: str = "https://api.ollama.com/api/generate"
+    # Hugging Face LLM configuration for Clinical Decision Support Reporting
+    hf_token: str = os.getenv("HF_TOKEN", "")
+    hf_model: str = os.getenv("HF_MODEL", "meta-llama/Llama-3.3-70B-Instruct")
+    hf_router_url: str = "https://router.huggingface.co/v1/chat/completions"
+
+
+    # Backwards-compatibility aliases
+    ollama_model: str = "meta-llama/Llama-3.3-70B-Instruct"
+    ollama_url: str = "https://router.huggingface.co/v1/chat/completions"
 
 config = OncoBotConfig()
+

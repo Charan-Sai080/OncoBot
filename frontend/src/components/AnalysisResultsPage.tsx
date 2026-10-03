@@ -39,7 +39,8 @@ export const AnalysisResultsPage: React.FC<AnalysisResultsPageProps> = ({
   onRegenerateReport,
   onBack,
 }) => (
-  <main className="mx-auto mb-8 w-full max-w-[1240px]" aria-labelledby="analysis-results-title">
+  <main className="mx-auto mb-8 w-full max-w-[1400px]" aria-labelledby="analysis-results-title">
+
     <header className="mb-6 flex flex-col gap-4 rounded-3xl border border-deep-teal/20 bg-card-mint p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between lg:p-6">
       <div className="flex items-start gap-3">
         <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-deep-teal/15 bg-sea-foam text-deep-teal">

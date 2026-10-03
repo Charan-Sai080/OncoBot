@@ -41,7 +41,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
     <>
       {/* Master Navigation Tab Pills — intentionally outside the dashboard card */}
       <nav
-        className="w-full max-w-[1240px] mx-auto mb-4 flex justify-center md:justify-end"
+        className="w-full max-w-[1400px] mx-auto mb-4 flex justify-center md:justify-end"
         aria-label="Clinical intelligence workspace views"
       >
         <div className="workspace-tab-scroll flex h-[46px] w-full max-w-full flex-nowrap items-center gap-1.5 overflow-x-auto bg-paper-white p-1.5 rounded-full border border-charcoal-navy/15 shadow-sm md:w-auto">
@@ -107,7 +107,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
         </div>
       </nav>
 
-      <section className="w-full max-w-[1240px] mx-auto bg-card-mint border border-charcoal-navy/15 rounded-3xl p-6 lg:p-8 shadow-none transition-all">
+      <section className="w-full max-w-[1400px] mx-auto bg-card-mint border border-charcoal-navy/15 rounded-3xl p-6 lg:p-8 shadow-none transition-all">
       {/* Unified Master Control Header */}
       <div className="mb-6 pb-5 border-b border-charcoal-navy/10">
         <span className="font-mono text-[11px] font-semibold text-deep-teal tracking-wider uppercase block mb-1">
@@ -205,28 +205,28 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
 
       {/* 2. FULL-WIDTH VIEW: PATHOLOGY (WSI) */}
       {activeTab === 'wsi' && (
-        <div className="w-full max-w-[900px] mx-auto animate-in fade-in duration-300">
+        <div className="w-full mx-auto animate-in fade-in duration-300">
           <WsiViewerCard heatmap={heatmap} isLoading={isAnalyzing} />
         </div>
       )}
 
       {/* 3. FULL-WIDTH VIEW: GENOMIC PATHWAYS (320 KEGG) */}
       {activeTab === 'pathways' && (
-        <div className="w-full max-w-[900px] mx-auto animate-in fade-in duration-300">
+        <div className="w-full mx-auto animate-in fade-in duration-300">
           <PathwayAttentionCard pathways={pathways} />
         </div>
       )}
 
       {/* 4. FULL-WIDTH VIEW: SURVIVAL RISK & KM CURVES */}
       {activeTab === 'survival' && (
-        <div className="w-full max-w-[1240px] mx-auto animate-in fade-in duration-300">
+        <div className="w-full mx-auto animate-in fade-in duration-300">
           <SurvivalCurveCard kmData={kmData} patientId={patientId} />
         </div>
       )}
 
       {/* 5. FULL-WIDTH VIEW: CLINICAL DECISION REPORT */}
       {activeTab === 'report' && (
-        <div className="w-full max-w-[900px] mx-auto animate-in fade-in duration-300">
+        <div className="w-full mx-auto animate-in fade-in duration-300">
           <ClinicalReportCard
             report={report}
             patientId={patientId}

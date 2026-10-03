@@ -41,7 +41,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onSignIn, onBack }) => {
   };
 
   return (
-    <main className="w-full max-w-[1240px] mx-auto mb-8 min-h-[560px]">
+    <main className="w-full max-w-[1400px] mx-auto mb-8 min-h-[560px]">
+
       <section
         aria-labelledby="sign-in-title"
         className="rounded-3xl border border-deep-teal/20 bg-card-mint p-5 shadow-sm lg:p-8"
