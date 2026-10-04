@@ -26,7 +26,7 @@ class CrossAttentionFusion(nn.Module):
             nn.LayerNorm(d_model)
         )
         
-    def forward(self, genomic_emb, pathology_emb):
+    def forward(self, genomic_emb, pathology_emb, return_attention=False):
         """
         genomic_emb: (batch_size, seq_len_g, d_model) or (batch_size, d_model)
         pathology_emb: (batch_size, seq_len_p, d_model) or (batch_size, d_model)
@@ -57,5 +57,8 @@ class CrossAttentionFusion(nn.Module):
         # If sequence length > 1, we could apply pooling (e.g. mean pooling)
         elif fused.dim() == 3:
             fused = fused.mean(dim=1)
+            
+        if return_attention:
+            return fused, attn_weights
             
         return fused

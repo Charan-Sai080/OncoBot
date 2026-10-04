@@ -112,3 +112,39 @@ class MultimodalTrainer:
             epoch_loss += loss.item()
             
         return epoch_loss / len(dataloader)
+
+    def evaluate_epoch(self, dataloader, alpha=0.5):
+        self.genomic_model.eval()
+        self.pathology_model.eval()
+        self.fusion_model.eval()
+        self.survival_head.eval()
+        
+        epoch_loss = 0.0
+        
+        with torch.no_grad():
+            for batch in tqdm(dataloader, desc="Evaluating"):
+                patient_ids = batch['patient_id']
+                genomic_features = batch['genomic_features'].float().to(self.device)
+                wsi_paths = batch['wsi_path']
+                survivals = batch['survival_time'].float().to(self.device)
+                censors = batch['censor'].float().to(self.device)
+                
+                pathology_patches_list = []
+                for pid, path in zip(patient_ids, wsi_paths):
+                    p_feats = self._get_or_extract_wsi_features(pid, path)
+                    pathology_patches_list.append(p_feats)
+                    
+                pathology_patches = torch.stack(pathology_patches_list).to(self.device)
+                
+                g_emb = self.genomic_model(genomic_features)
+                p_emb = self.pathology_model(pathology_patches)
+                
+                loss_align = self.info_nce_loss_fn(g_emb, p_emb)
+                fused = self.fusion_model(g_emb, p_emb)
+                risk_scores = self.survival_head(fused)
+                loss_cox = self.cox_loss_fn(risk_scores, survivals, censors)
+                
+                loss = (alpha * loss_align) + ((1 - alpha) * loss_cox)
+                epoch_loss += loss.item()
+                
+        return epoch_loss / len(dataloader)

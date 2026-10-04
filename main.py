@@ -14,30 +14,49 @@ from models.survival_head import CoxSurvivalHead
 from training.losses import InfoNCELoss, CoxPHLoss
 from training.trainer import MultimodalTrainer
 
-class DummyMultiModalDataset(Dataset):
+class OncoMultiModalDataset(Dataset):
     """
-    Temporary dataset wrapper. 
-    In production, this aligns the 'aligned_3way_slides_MINIMAL_case_level.csv' 
-    and 'TCGA-BLCA.star_counts.tsv' correctly.
+    Dataset that aligns the WSI features, genomic features, and survival data.
+    Gracefully handles cases where data might be missing.
     """
-    def __init__(self, csv_path, tsv_path):
+    def __init__(self, csv_path, tsv_path, survival_path, wsi_features_dir):
         self.df = pd.read_csv(csv_path)
-        self.genomic_loader = GenomicDataLoader(tsv_path)
+        self.surv_df = pd.read_csv(survival_path, sep='\t')
         
-        # Simple alignment matching patient ID (case_id)
+        # Build mapping for survival
+        self.surv_map = self.surv_df.drop_duplicates(subset=['_PATIENT']).set_index('_PATIENT')[['OS.time', 'OS']].to_dict('index')
+        
+        self.genomic_loader = GenomicDataLoader(tsv_path)
+        self.wsi_features_dir = wsi_features_dir
+        
         self.data = []
         for _, row in self.df.iterrows():
-            pid = row.get('case_id', row.iloc[0])
-            g_feats = self.genomic_loader.get_patient_data(pid)
-            if g_feats is not None:
-                self.data.append({
-                    'patient_id': pid,
-                    'genomic_features': g_feats.values,
-                    'wsi_path': row['slide_path'] if 'slide_path' in row else row.get('s3_url', 'file:///tmp/dummy.svs'),
-                    'survival_time': row.get('survival_time', np.random.uniform(10, 100)),
-                    'censor': row.get('censor', np.random.choice([0, 1]))
-                })
+            pid = row['case_barcode']
+            
+            # 1. Check if patient has pre-extracted .pt features
+            pt_path = os.path.join(self.wsi_features_dir, f"{pid}_features.pt")
+            if not os.path.exists(pt_path):
+                continue
                 
+            # 2. Check genomic data
+            g_feats = self.genomic_loader.get_patient_data(pid)
+            if g_feats is None:
+                continue
+                
+            # 3. Check survival data
+            if pid not in self.surv_map:
+                continue
+                
+            surv_info = self.surv_map[pid]
+            
+            self.data.append({
+                'patient_id': pid,
+                'genomic_features': g_feats.values,
+                'wsi_path': row.get('aws_url', ''), # Passed to trainer for fallback if needed
+                'survival_time': surv_info['OS.time'],
+                'censor': surv_info['OS']
+            })
+            
     def __len__(self):
         return len(self.data)
         
@@ -53,36 +72,36 @@ def main():
     epochs = 10
     lr = 1e-4
     
-    csv_path = 'data/aligned_3way_slides_MINIMAL_case_level.csv'
-    tsv_path = 'data/TCGA-BLCA.star_counts.tsv'
+    csv_path = 'Datasets/aligned_3way_slides_MINIMAL_case_level.csv'
+    tsv_path = 'Datasets/TCGA-BLCA.star_counts.tsv'
+    survival_path = 'Datasets/TCGA-BLCA.survival.tsv'
+    wsi_features_dir = 'Datasets/WSI_Features'
+    gmt_path = 'Datasets/kegg_cancer_pathways.gmt'
     
-    # Check if data exists, else skip for demonstration
-    if not os.path.exists(csv_path) or not os.path.exists(tsv_path):
-        print(f"Data files missing. Please ensure {csv_path} and {tsv_path} exist.")
-        # Create dummy files for initialization testing
-        os.makedirs('data', exist_ok=True)
-        pd.DataFrame({
-            'case_id': ['patient1', 'patient2'],
-            'slide_path': ['file:///tmp/dummy1.svs', 's3://dummy-bucket/dummy2.svs'],
-            'survival_time': [100.5, 45.2],
-            'censor': [1, 0]
-        }).to_csv(csv_path, index=False)
-        
-        pd.DataFrame({
-            'patient1': [10, 20, 30],
-            'patient2': [5, 10, 15]
-        }, index=['GENE1', 'GENE2', 'GENE3']).to_csv(tsv_path, sep='\t')
-        print("Created dummy datasets for testing.")
-
     # 2. Data Loading
     print("Loading datasets...")
-    dataset = DummyMultiModalDataset(csv_path, tsv_path)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    dataset = OncoMultiModalDataset(csv_path, tsv_path, survival_path, wsi_features_dir)
+    print(f"Loaded {len(dataset)} aligned patient records.")
+    
+    if len(dataset) == 0:
+        print("No valid data found. Exiting.")
+        return
+
+    # Train/Test Split (80/20)
+    train_size = int(0.8 * len(dataset))
+    test_size = len(dataset) - train_size
+    train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
+    
+    print(f"Split data into {train_size} training samples and {test_size} testing samples.")
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
     
     num_genes = len(dataset.genomic_loader.data)
     gene_list = dataset.genomic_loader.data.index.tolist()
     
-    mapper = PathwayMapper(gene_list)
+    # Use real KEGG pathways
+    mapper = PathwayMapper(gene_list, gmt_path=gmt_path)
     num_pathways = mapper.num_pathways
     pathway_mask = mapper.pathway_mask.to(device)
 
@@ -124,14 +143,25 @@ def main():
         info_nce_loss_fn=info_nce_loss,
         cox_loss_fn=cox_loss,
         optimizer=optimizer,
-        device=device
+        device=device,
+        features_output_dir=wsi_features_dir
     )
     
     # 6. Training Loop
     print("Starting training...")
     for epoch in range(1, epochs + 1):
-        loss = trainer.train_epoch(dataloader, alpha=0.5)
-        print(f"Epoch {epoch}/{epochs} - Loss: {loss:.4f}")
+        train_loss = trainer.train_epoch(train_loader, alpha=0.5)
+        val_loss = trainer.evaluate_epoch(test_loader, alpha=0.5)
+        print(f"Epoch {epoch}/{epochs} - Train Loss: {train_loss:.4f} - Val Loss: {val_loss:.4f}")
+
+    # 7. Save Model Weights
+    print("Saving trained model weights...")
+    os.makedirs("weights", exist_ok=True)
+    torch.save(genomic_model.state_dict(), "weights/genomic_model.pth")
+    torch.save(pathology_model.state_dict(), "weights/pathology_model.pth")
+    torch.save(fusion_model.state_dict(), "weights/fusion_model.pth")
+    torch.save(survival_head.state_dict(), "weights/survival_head.pth")
+    print("Weights saved successfully to weights/ directory!")
 
 if __name__ == '__main__':
     main()

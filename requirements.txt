@@ -9,3 +9,8 @@ scipy
 requests
 tqdm
 Pillow
+fastapi
+uvicorn
+python-multipart
+boto3
+pydantic

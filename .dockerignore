@@ -1,0 +1,16 @@
+node_modules/
+frontend/node_modules/
+.git/
+.env
+__pycache__/
+*.pyc
+.DS_Store
+.claude/
+.oxlintrc.json
+
+# Don't copy huge datasets/temporary files into the container
+Datasets/
+temp_wsi/
+temp_patches/
+wsi_patches/
+uploads/

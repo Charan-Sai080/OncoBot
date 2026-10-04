@@ -317,7 +317,7 @@ export const PatientUploadCard: React.FC<PatientUploadCardProps> = ({
               <input
                 ref={wsiInputRef}
                 type="file"
-                accept=".svs,.tif,.tiff,.ndpi,.mrxs,.png,.jpg,.jpeg"
+                accept=".svs,.tif,.tiff,.ndpi,.mrxs,.png,.jpg,.jpeg,.pt"
                 onChange={handleWsiChange}
                 className="hidden"
               />

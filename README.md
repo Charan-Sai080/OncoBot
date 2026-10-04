@@ -578,3 +578,22 @@ If you utilize OncoBot or its architectural components in your academic work, pl
 - **Biochemical Pathways:** Molecular Signatures Database (MSigDB) and Kyoto Encyclopedia of Genes and Genomes (KEGG).
 - **Vision Foundation:** Meta AI Research (DINO Vision Transformers).
 
+
+## Production Deployment (Docker)
+The entire unified platform (React Frontend + FastAPI Backend) is fully containerized. To build and run:
+```bash
+# 1. Build the multi-stage Docker image
+docker build -t oncobot:latest .
+
+# 2. Run the application
+docker run -p 8000:8000 oncobot:latest
+```
+Access the application at `http://localhost:8000`.
+
+## Testing the UI (Single Patients)
+If you want to test the Web UI without needing a 4GB Whole Slide Image, we have carved out 5 isolated patients.
+1. Look in the `test_patients_for_ui/` directory.
+2. Open the web dashboard and click "Upload Patient Case".
+3. Upload `TCGA-DK-A3IS_rna.tsv` into the RNA-Seq box.
+4. Upload `TCGA-DK-A3IS_features.pt` into the WSI box.
+5. The pipeline will securely bypass AWS chunking and run the trained PyTorch inference directly!

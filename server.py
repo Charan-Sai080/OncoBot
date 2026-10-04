@@ -75,22 +75,37 @@ genomic_model = PathwayAwareTransformer(
     num_pathways=num_pathways,
     pathway_mask=pathway_mask,
     d_model=config.d_model
-).to(device).eval()
+).to(device)
 
 pathology_model = WSI_MIL_Encoder(
     input_dim=config.dino_dim,
     d_model=config.d_model,
     num_patches=config.num_patches
-).to(device).eval()
+).to(device)
 
 fusion_model = CrossAttentionFusion(
     d_model=config.d_model,
     nhead=config.num_heads
-).to(device).eval()
+).to(device)
 
 survival_head = CoxSurvivalHead(
     input_dim=config.d_model
-).to(device).eval()
+).to(device)
+
+# Load real trained weights if they exist (produced by main.py Phase 3)
+try:
+    genomic_model.load_state_dict(torch.load("weights/genomic_model.pth", map_location=device))
+    pathology_model.load_state_dict(torch.load("weights/pathology_model.pth", map_location=device))
+    fusion_model.load_state_dict(torch.load("weights/fusion_model.pth", map_location=device))
+    survival_head.load_state_dict(torch.load("weights/survival_head.pth", map_location=device))
+    print("[Onco_Bot Server] Successfully loaded trained PyTorch model weights!")
+except Exception as e:
+    print(f"[Onco_Bot Server] Warning: Could not load trained weights. Falling back to random initialization. Error: {e}")
+
+genomic_model.eval()
+pathology_model.eval()
+fusion_model.eval()
+survival_head.eval()
 
 report_generator = ClinicalReportGenerator(
     model=config.hf_model,
